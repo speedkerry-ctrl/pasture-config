@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "animals": [
+    {
+      "id": "sheep",
+      "name": "羊",
+      "emoji": "🐑",
+      "sellPrice": 50,
+      "moodDecay": 0.5,
+      "genes": {
+        "ear": [
+          {"v":"round","w":40,"rare":false,"dn":"圓耳"},
+          {"v":"pointy","w":30,"rare":false,"dn":"尖耳"},
+          {"v":"floppy","w":20,"rare":false,"dn":"垂耳"},
+          {"v":"none","w":10,"rare":true,"dn":"無耳"}
+        ],
+        "color": [
+          {"v":"white","w":35,"rare":false,"dn":"白"},
+          {"v":"brown","w":30,"rare":false,"dn":"棕"},
+          {"v":"grey","w":20,"rare":false,"dn":"灰"},
+          {"v":"orange","w":10,"rare":false,"dn":"橘"},
+          {"v":"black","w":5,"rare":true,"dn":"黑"}
+        ],
+        "pattern": [
+          {"v":"none","w":40,"rare":false,"dn":"無"},
+          {"v":"spot","w":30,"rare":false,"dn":"斑點"},
+          {"v":"patch","w":20,"rare":false,"dn":"花斑"},
+          {"v":"stripe","w":10,"rare":true,"dn":"條紋"}
+        ],
+        "tail": [
+          {"v":"short","w":40,"rare":false,"dn":"短尾"},
+          {"v":"fluffy","w":25,"rare":false,"dn":"蓬尾"},
+          {"v":"long","w":20,"rare":false,"dn":"長尾"},
+          {"v":"curl","w":15,"rare":true,"dn":"捲尾"}
+        ],
+        "horn": [
+          {"v":"none","w":50,"rare":false,"dn":"無"},
+          {"v":"small","w":25,"rare":false,"dn":"小角"},
+          {"v":"large","w":15,"rare":true,"dn":"大角"},
+          {"v":"spiral","w":10,"rare":true,"dn":"螺旋角"}
+        ],
+        "eye": [
+          {"v":"black","w":50,"rare":false,"dn":"黑眼"},
+          {"v":"brown","w":25,"rare":false,"dn":"棕眼"},
+          {"v":"blue","w":15,"rare":false,"dn":"藍眼"},
+          {"v":"gold","w":7,"rare":true,"dn":"金眼"},
+          {"v":"red","w":3,"rare":true,"dn":"紅眼"}
+        ]
+      }
+    }
+  ],
+  "fruits": [
+    {"id":"apple","name":"蘋果","emoji":"🍎","sellPrice":10,"baseYield":3,"growTime":60},
+    {"id":"berry","name":"莓果","emoji":"🫐","sellPrice":6,"baseYield":5,"growTime":45},
+    {"id":"melon","name":"哈密瓜","emoji":"🍈","sellPrice":25,"baseYield":1,"growTime":120},
+    {"id":"grape","name":"葡萄","emoji":"🍇","sellPrice":12,"baseYield":4,"growTime":90},
+    {"id":"starfruit","name":"星果","emoji":"⭐","sellPrice":40,"baseYield":2,"growTime":180}
+  ],
+  "crystals": [
+    {"id":"fire","name":"火晶","emoji":"🔥","w":50,"cookBonus":0.2},
+    {"id":"dew","name":"露晶","emoji":"💧","w":35,"breedSpeedMult":0.6},
+    {"id":"dark","name":"暗晶","emoji":"🌑","w":15,"mutationMult":5}
+  ],
+  "rarity": {
+    "thresholds": [0,1,2,3,4],
+    "names": ["普通","稀有","史詩","傳說","究極"],
+    "sellMult": [1,3,8,20,60],
+    "colors": ["#88aa66","#5588cc","#9955dd","#dd9930","#dd4444"]
+  },
+  "balance": {
+    "breedBase": 30,
+    "naturalBreedInterval": 60,
+    "naturalBreedMoodMin": 80,
+    "moodDecayBase": 0.5,
+    "speedBreedCost": 100,
+    "speedBreedComplete": true,
+    "upgrades": {
+      "farm_slot": 200,
+      "ranch_cap": 300,
+      "cook_slot": 400,
+      "crystal_node": 500,
+      "buy_sheep": 100
+    },
+    "seedPrices": {
+      "apple": 50,
+      "berry": 50,
+      "melon": 150,
+      "grape": 120,
+      "starfruit": 300
+    }
+  },
+  "ui": {
+    "gameTitle": "牧野物語",
+    "farmName": "農場區",
+    "ranchName": "牧場區",
+    "cookName": "烹飪區",
+    "crystalName": "晶石洞",
+    "farmSub": "種植・收成",
+    "ranchSub": "養殖・繁殖",
+    "cookSub": "料理・販售",
+    "crystalSub": "挖掘・加成"
+  },
+  "cloudUrl": "https://speedkerry-ctrl.github.io/pasture-config/pasture_config.json"
+}
