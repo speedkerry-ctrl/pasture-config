@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WordStack — 英文疊疊消</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap');
+
+:root {
+  --bg:       #f0f4ff;
+  --surface:  #ffffff;
+  --panel:    #f8faff;
+  --border:   #dce4f5;
+  --shadow:   #c5d0ee50;
+  --text:     #1e2640;
+  --muted:    #7986b0;
+  --accent:   #4c6ef5;
+  --green:    #2ecc71;
+  --orange:   #f39c12;
+  --red:      #e74c3c;
+  --gold:     #f1c40f;
+  --purple:   #9b59b6;
+  --teal:     #1abc9c;
+
+  /* Layer colors */
+  --l1c: #4c6ef5;  /* blue  - bottom */
+  --l2c: #9b59b6;  /* purple - mid */
+  --l3c: #f39c12;  /* orange - top */
+
+  --tile-size: 64px;
+  --gap: 7px;
+  --r: 14px;
+  --font-main: 'Nunito', sans-serif;
+  --font-title: 'Baloo 2', cursive;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body { height:100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 10px 40px;
+  min-height: 100vh;
+}
+
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 5%,  #4c6ef510 0%, transparent 55%),
+    radial-gradient(ellipse 60% 45% at 90% 90%, #9b59b610 0%, transparent 55%);
+  pointer-events:none; z-index:0;
+}
+
+.wrap { position:relative; z-index:1; width:100%; max-width:600px; }
+
+/* ── HEADER ─────────────────────────── */
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.title {
+  font-family: var(--font-title);
+  font-size: 2rem; font-weight:800;
+  color: var(--accent);
+}
+.title em { color: var(--purple); font-style:normal; }
+
+.header-right { display:flex; gap:8px; align-items:center; }
+.icon-btn {
+  width:40px; height:40px; border-radius:50%;
+  border:1.5px solid var(--border);
+  background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem; cursor:pointer;
+  transition:all 0.15s; box-shadow:0 2px 6px var(--shadow);
+}
+.icon-btn:hover { border-color:var(--accent); transform:scale(1.08); }
+
+/* ── SR BANNER ─────────────────────── */
+.sr-banner {
+  display:none;
+  background: #fff8e1;
+  border: 1.5px solid var(--gold);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #7d5900;
+  gap: 10px;
+  align-items: center;
+}
+.sr-banner.show { display:flex; }
+.sr-banner span { flex:1; }
+.sr-close { cursor:pointer; font-size:1rem; }
+
+/* ── DIFF TABS ─────────────────────── */
+.diff-tabs { display:flex; gap:7px; margin-bottom:14px; }
+.dtab {
+  flex:1; padding:9px 6px; border-radius:12px;
+  border:2px solid var(--border);
+  background:var(--surface); color:var(--muted);
+  font-family:var(--font-main); font-weight:800; font-size:0.72rem;
+  cursor:pointer; transition:all 0.15s; letter-spacing:0.3px;
+  box-shadow:0 2px 6px var(--shadow);
+}
+.dtab.active { border-color:var(--accent); color:var(--accent); background:#eef2ff; }
+.dtab:hover:not(.active) { border-color:var(--muted); color:var(--text); }
+
+/* ── STATS BAR ─────────────────────── */
+.stats { display:flex; gap:8px; margin-bottom:14px; }
+.sbox {
+  flex:1; background:var(--surface); border:1.5px solid var(--border);
+  border-radius:14px; padding:9px 8px; text-align:center;
+  box-shadow:0 3px 10px var(--shadow);
+}
+.slabel { display:block; font-size:0.55rem; font-weight:800; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px; }
+.sval { font-family:var(--font-title); font-size:1.35rem; font-weight:700; color:var(--text); line-height:1; }
+.sval.warn { color:var(--red); animation:blink 0.8s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+/* ── SCENE ─────────────────────────── */
+.scene {
+  width:100%; display:flex; flex-direction:column; align-items:center;
+  gap:0; margin-bottom:14px;
+}
+.layer-wrap { width:100%; display:flex; flex-direction:column; align-items:center; }
+.layer-label {
+  display:flex; align-items:center; gap:8px;
+  margin-bottom:7px; font-size:0.68rem; font-weight:800;
+  letter-spacing:1.5px; text-transform:uppercase; color:var(--muted);
+}
+.layer-badge {
+  padding:3px 12px; border-radius:20px; font-size:0.62rem; font-weight:800;
+  letter-spacing:1px;
+}
+.lb-1 { background:#eef2ff; border:1.5px solid var(--l1c); color:var(--l1c); }
+.lb-2 { background:#f5eeff; border:1.5px solid var(--l2c); color:var(--l2c); }
+.lb-3 { background:#fff8e1; border:1.5px solid var(--l3c); color:var(--l3c); }
+
+.layer-connector { width:2px; height:18px; background:linear-gradient(to bottom,var(--border),transparent); margin:0 auto; }
+
+.grid-container {
+  background:var(--surface); border:2px solid var(--border);
+  border-radius:18px; padding:12px;
+  box-shadow:0 6px 20px var(--shadow);
+  transition:opacity 0.5s;
+  overflow-x:auto;
+}
+.gc-1 { border-color:var(--l1c); box-shadow:0 6px 24px #4c6ef520; }
+.gc-2 { border-color:var(--l2c); box-shadow:0 6px 24px #9b59b620; }
+.gc-3 { border-color:var(--l3c); box-shadow:0 6px 24px #f39c1220; }
+.gc-cleared { opacity:0.25; pointer-events:none; }
+
+.grid { display:grid; gap:var(--gap); }
+
+/* ── TILE ─────────────────────────── */
+.tile {
+  width:var(--tile-size); height:var(--tile-size);
+  border-radius:var(--r); border:2px solid transparent;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; position:relative; overflow:hidden;
+  transition:transform 0.12s, box-shadow 0.12s, border-color 0.15s, background 0.15s;
+  user-select:none; -webkit-user-select:none;
+}
+.tile.t1 { background:#eef2ff; border-color:#c5d0f5; }
+.tile.t2 { background:#f5eeff; border-color:#d8c5f0; }
+.tile.t3 { background:#fff8e1; border-color:#f0d880; }
+
+.tile.free:hover:not(.matched) { transform:translateY(-4px) scale(1.05); }
+.tile.selected {
+  border-color:var(--accent) !important;
+  background:#dce4ff !important;
+  box-shadow:0 0 0 3px #4c6ef533, 0 6px 16px #4c6ef540;
+  transform:translateY(-5px) scale(1.08);
+}
+.tile.locked {
+  background:#f0f0f0 !important; border-color:#ddd !important;
+  cursor:not-allowed; opacity:0.5;
+}
+.tile.locked .tile-letter { color:#bbb !important; }
+.tile.hint-glow {
+  border-color:var(--gold) !important;
+  box-shadow:0 0 0 3px #f1c40f55, 0 0 20px #f1c40f80 !important;
+  animation:hintAnim 0.7s ease-in-out infinite alternate;
+}
+@keyframes hintAnim {
+  from { box-shadow:0 0 0 2px #f1c40f44, 0 0 12px #f1c40f60; }
+  to   { box-shadow:0 0 0 4px #f1c40faa, 0 0 28px #f1c40fc0; }
+}
+.tile.matched { animation:tileOut 0.45s forwards; pointer-events:none; }
+@keyframes tileOut {
+  0%   { transform:scale(1);   opacity:1; }
+  35%  { transform:scale(1.3) rotate(-8deg); background:#a8f0ce; border-color:var(--green); }
+  100% { transform:scale(0.1) rotate(15deg); opacity:0; }
+}
+.tile.empty { background:transparent !important; border-color:transparent !important; cursor:default; pointer-events:none; }
+
+.tile-emoji { font-size:1.2rem; position:absolute; top:4px; right:5px; opacity:0.45; line-height:1; }
+.tile-letter {
+  font-family:var(--font-title); font-weight:800; font-size:1.55rem;
+  color:var(--text); position:relative; z-index:1; line-height:1;
+}
+.tile.t1 .tile-letter { color:#3a56d4; }
+.tile.t2 .tile-letter { color:#7d44b0; }
+.tile.t3 .tile-letter { color:#c07800; }
+.tile.selected .tile-letter { color:var(--accent) !important; }
+.tile-sub { font-size:0.36rem; font-weight:800; color:var(--muted); text-transform:uppercase; position:absolute; bottom:4px; letter-spacing:0.3px; }
+.lock-icon { font-size:1.2rem; opacity:0.35; position:absolute; }
+
+/* ── SLOT PANEL ─────────────────────── */
+.slot-panel {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:18px; padding:14px 16px; margin-bottom:10px;
+  box-shadow:0 4px 14px var(--shadow);
+}
+.slot-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
+.slot-head { font-size:0.6rem; font-weight:800; color:var(--muted); letter-spacing:2px; text-transform:uppercase; }
+.slot-layer-pill { font-size:0.58rem; font-weight:800; padding:3px 10px; border-radius:10px; }
+.sp-1 { background:#eef2ff; border:1.5px solid var(--l1c); color:var(--l1c); }
+.sp-2 { background:#f5eeff; border:1.5px solid var(--l2c); color:var(--l2c); }
+.sp-3 { background:#fff8e1; border:1.5px solid var(--l3c); color:var(--l3c); }
+
+.slot-tiles {
+  display:flex; gap:7px; flex-wrap:wrap;
+  min-height:52px; align-items:center;
+}
+.slot-tile {
+  width:46px; height:46px; border-radius:10px;
+  background:#eef2ff; border:2px solid var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-title); font-weight:800; font-size:1.25rem; color:var(--accent);
+  cursor:pointer; animation:slotIn 0.15s ease;
+  transition:transform 0.1s, background 0.1s;
+}
+.slot-tile:hover { transform:scale(1.12); background:#dce4ff; }
+@keyframes slotIn { from{transform:scale(0.5);opacity:0;} to{transform:scale(1);opacity:1;} }
+.slot-ph { font-size:0.78rem; color:var(--border); font-style:italic; }
+
+.word-live { margin-top:8px; font-size:0.82rem; font-weight:800; min-height:22px; text-align:center; }
+.word-live.ok     { color:var(--green); }
+.word-live.partial{ color:var(--orange); }
+.word-live.bad    { color:var(--red); animation:shakeX 0.3s; }
+@keyframes shakeX { 0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);} }
+
+/* ── CONTROLS ─────────────────────── */
+.controls { display:flex; gap:8px; margin-bottom:12px; }
+.btn {
+  flex:1; padding:12px 8px; border-radius:13px; border:none;
+  font-family:var(--font-main); font-weight:800; font-size:0.82rem;
+  cursor:pointer; transition:all 0.13s; letter-spacing:0.3px;
+  box-shadow:0 4px 0 #0001;
+}
+.btn:active { transform:translateY(3px); box-shadow:0 1px 0 #0001; }
+.btn-hint { background:var(--gold); color:#3d2800; }
+.btn-hint:hover { filter:brightness(1.07); }
+.btn-clr  { background:var(--surface); color:var(--muted); border:1.5px solid var(--border); }
+.btn-new  { background:var(--accent); color:#fff; }
+.btn-new:hover { background:#3a5be0; }
+
+/* ── TARGET WORDS ─────────────────── */
+.targets-panel {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:16px; padding:12px 14px; margin-bottom:10px;
+  box-shadow:0 3px 10px var(--shadow);
+}
+.targets-head { font-size:0.6rem; font-weight:800; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:9px; display:block; }
+.targets-layers { display:flex; flex-direction:column; gap:7px; }
+.target-layer-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.tlt { font-size:0.55rem; font-weight:800; padding:3px 8px; border-radius:7px; letter-spacing:1px; white-space:nowrap; }
+.tlt-1 { background:#eef2ff; color:var(--l1c); }
+.tlt-2 { background:#f5eeff; color:var(--l2c); }
+.tlt-3 { background:#fff8e1; color:var(--l3c); }
+.tw {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:0.75rem; font-weight:800; padding:4px 11px;
+  border-radius:20px; border:1.5px solid var(--border);
+  color:var(--muted); background:var(--panel);
+  transition:all 0.3s; cursor:default;
+}
+.tw.found { background:#e8f8f0; border-color:var(--green); color:var(--green); text-decoration:line-through; opacity:0.7; }
+.tw:hover:not(.found) { border-color:var(--accent); color:var(--accent); }
+
+/* ── FOUND LOG ─────────────────────── */
+.found-panel {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:16px; padding:12px 14px;
+  box-shadow:0 3px 10px var(--shadow);
+}
+.found-head { font-size:0.6rem; font-weight:800; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; display:block; }
+.found-list { display:flex; flex-wrap:wrap; gap:6px; min-height:28px; }
+.ftag {
+  padding:4px 11px; border-radius:20px; font-size:0.73rem; font-weight:800;
+  animation:tagIn 0.2s; display:flex; align-items:center; gap:4px;
+  background:#e8f8f0; border:1.5px solid var(--green); color:#1a7a4a;
+}
+@keyframes tagIn { from{transform:scale(0.6);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+.prog-wrap { background:var(--border); border-radius:6px; height:7px; overflow:hidden; margin-top:10px; }
+.prog-bar { height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); border-radius:6px; transition:width 0.5s cubic-bezier(.4,1,.6,1); }
+
+/* ── TOAST ─────────────────────────── */
+#toast {
+  position:fixed; top:16px; left:50%;
+  transform:translateX(-50%) translateY(-80px);
+  padding:11px 22px; border-radius:30px;
+  font-weight:800; font-size:0.88rem;
+  transition:transform 0.28s cubic-bezier(.4,1.4,.6,1);
+  z-index:999; pointer-events:none; white-space:nowrap;
+  background:var(--surface); border:1.5px solid var(--border); color:var(--text);
+  box-shadow:0 4px 20px #0002;
+}
+#toast.show { transform:translateX(-50%) translateY(0); }
+#toast.t-ok   { background:#e8f8f0; border-color:var(--green); color:#1a7a4a; }
+#toast.t-err  { background:#fdeaea; border-color:var(--red);   color:#a00; }
+#toast.t-hint { background:#fff8e1; border-color:var(--gold);  color:#7d5900; }
+#toast.t-sr   { background:#f5eeff; border-color:var(--purple);color:#5a1a8a; }
+
+/* ── MODAL ─────────────────────────── */
+#modal {
+  display:none; position:fixed; inset:0; background:#00000066;
+  z-index:200; align-items:center; justify-content:center;
+}
+#modal.show { display:flex; }
+.mbox {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:24px; padding:32px 26px; text-align:center;
+  max-width:340px; width:90%;
+  box-shadow:0 20px 60px #0003;
+  animation:modalIn 0.3s cubic-bezier(.4,1.2,.6,1);
+}
+@keyframes modalIn { from{transform:scale(0.8) translateY(20px);opacity:0;} to{transform:scale(1);opacity:1;} }
+.m-emoji { font-size:3.5rem; margin-bottom:8px; }
+.m-title { font-family:var(--font-title); font-size:1.7rem; color:var(--accent); margin-bottom:6px; }
+.m-stars { font-size:1.6rem; letter-spacing:5px; margin:6px 0; }
+.m-score { font-family:var(--font-title); font-size:2.4rem; color:var(--text); margin:8px 0; }
+.m-body  { font-size:0.8rem; color:var(--muted); line-height:1.9; margin-bottom:16px; }
+.m-input-row { display:flex; gap:8px; margin-bottom:14px; }
+.m-input {
+  flex:1; padding:10px 14px; border-radius:10px;
+  border:1.5px solid var(--border); font-family:var(--font-main);
+  font-size:0.9rem; font-weight:700; color:var(--text);
+  background:var(--panel); outline:none;
+}
+.m-input:focus { border-color:var(--accent); }
+.m-btn-row { display:flex; gap:8px; }
+.mBtn {
+  flex:1; padding:12px; border-radius:12px; border:none;
+  font-family:var(--font-main); font-weight:800; font-size:0.82rem;
+  cursor:pointer; transition:all 0.13s; box-shadow:0 3px 0 #0001;
+}
+.mBtn:active { transform:translateY(2px); box-shadow:0 1px 0 #0001; }
+.mBtn-ok   { background:var(--green); color:#fff; }
+.mBtn-clr  { background:var(--surface); color:var(--muted); border:1.5px solid var(--border); }
+.mBtn-ok:hover { background:#27ae60; }
+
+/* ── LEADERBOARD ─────────────────────── */
+#lb-modal {
+  display:none; position:fixed; inset:0; background:#00000066;
+  z-index:300; align-items:center; justify-content:center;
+}
+#lb-modal.show { display:flex; }
+.lb-box {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:22px; padding:24px 20px; width:92%; max-width:380px;
+  max-height:85vh; overflow-y:auto;
+  box-shadow:0 20px 60px #0003;
+  animation:modalIn 0.3s cubic-bezier(.4,1.2,.6,1);
+}
+.lb-title { font-family:var(--font-title); font-size:1.4rem; color:var(--accent); margin-bottom:14px; text-align:center; }
+.lb-filter { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.lb-tab {
+  padding:5px 12px; border-radius:20px; border:1.5px solid var(--border);
+  font-size:0.68rem; font-weight:800; cursor:pointer; color:var(--muted);
+  background:var(--panel); transition:all 0.12s;
+}
+.lb-tab.active { border-color:var(--accent); color:var(--accent); background:#eef2ff; }
+.lb-row {
+  display:flex; align-items:center; gap:10px; padding:9px 12px;
+  border-radius:10px; margin-bottom:5px; background:var(--panel);
+  border:1.5px solid var(--border);
+}
+.lb-rank { font-family:var(--font-title); font-size:1.1rem; font-weight:800; width:28px; color:var(--muted); }
+.lb-rank.r1 { color:#f1c40f; }
+.lb-rank.r2 { color:#bdc3c7; }
+.lb-rank.r3 { color:#cd7f32; }
+.lb-name { flex:1; font-weight:700; font-size:0.85rem; }
+.lb-info { font-size:0.7rem; color:var(--muted); text-align:right; line-height:1.5; }
+.lb-score { font-family:var(--font-title); font-size:1rem; color:var(--accent); }
+
+/* ── REVIEW MODE ─────────────────────── */
+#review-btn {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:12px; border-radius:13px;
+  background:linear-gradient(135deg,var(--purple),#7b3fbe);
+  color:#fff; border:none; font-family:var(--font-main); font-weight:800;
+  font-size:0.82rem; cursor:pointer; margin-bottom:12px;
+  box-shadow:0 4px 12px #9b59b630; transition:filter 0.15s;
+}
+#review-btn:hover { filter:brightness(1.08); }
+
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- WIN/LOSE MODAL -->
+<div id="modal">
+  <div class="mbox">
+    <div class="m-emoji" id="m-emoji">🎉</div>
+    <div class="m-title" id="m-title">Level Clear!</div>
+    <div class="m-stars" id="m-stars">⭐⭐⭐</div>
+    <div class="m-score" id="m-score">0 pts</div>
+    <div class="m-body" id="m-body"></div>
+    <div class="m-input-row" id="m-name-row" style="display:none">
+      <input class="m-input" id="m-name-input" placeholder="輸入名字上排行榜..." maxlength="16">
+    </div>
+    <div class="m-btn-row">
+      <button class="mBtn mBtn-clr" id="m-skip-btn" onclick="closeModal(false)">Skip</button>
+      <button class="mBtn mBtn-ok"  id="m-next-btn" onclick="closeModal(true)">▶ Next Level</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD MODAL -->
+<div id="lb-modal">
+  <div class="lb-box">
+    <div class="lb-title">🏆 Leaderboard</div>
+    <div class="lb-filter" id="lb-filter"></div>
+    <div id="lb-list"></div>
+    <br>
+    <button class="mBtn mBtn-clr" onclick="closeLB()" style="width:100%">Close</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="title">Word<em>Stack</em></div>
+    <div class="header-right">
+      <div class="icon-btn" onclick="openLB()" title="排行榜">🏆</div>
+      <div class="icon-btn" onclick="toggleReview()" title="複習模式">📖</div>
+      <div id="level-tag" style="font-size:0.7rem;font-weight:800;color:var(--muted);padding:6px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;">LV 1</div>
+    </div>
+  </div>
+
+  <!-- SR BANNER -->
+  <div class="sr-banner" id="sr-banner">
+    <span id="sr-msg">💡 你有需要複習的單字！</span>
+    <span class="sr-close" onclick="dismissSR()">✕</span>
+  </div>
+
+  <!-- DIFF TABS -->
+  <div class="diff-tabs">
+    <button class="dtab active" data-d="kids" onclick="setDiff('kids')">🧸 Kids</button>
+    <button class="dtab"        data-d="a1"   onclick="setDiff('a1')">A1 入門</button>
+    <button class="dtab"        data-d="a2"   onclick="setDiff('a2')">A2 初級</button>
+    <button class="dtab"        data-d="b1"   onclick="setDiff('b1')">B1 中級</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="sbox"><span class="slabel">Score</span> <span class="sval" id="sv-score">0</span></div>
+    <div class="sbox"><span class="slabel">Time</span>  <span class="sval" id="sv-time">∞</span></div>
+    <div class="sbox"><span class="slabel">Hints</span> <span class="sval" id="sv-hints">3</span></div>
+    <div class="sbox"><span class="slabel">Progress</span><span class="sval" id="sv-prog">0/0</span></div>
+  </div>
+
+  <!-- LAYER SCENE -->
+  <div class="scene" id="scene"></div>
+
+  <!-- SLOT PANEL -->
+  <div class="slot-panel">
+    <div class="slot-top">
+      <span class="slot-head">Selected Letters</span>
+      <span id="slot-pill" class="slot-layer-pill sp-1">—</span>
+    </div>
+    <div class="slot-tiles" id="slot-tiles">
+      <span class="slot-ph">點選字母，湊成單字後自動消除 ✨</span>
+    </div>
+    <div class="word-live" id="word-live"></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="btn btn-hint" onclick="useHint()">🔍 Hint <span id="hint-cnt" style="opacity:0.6;font-size:0.75rem"></span></button>
+    <button class="btn btn-clr"  onclick="clearSlot()">✕ Clear</button>
+    <button class="btn btn-new"  onclick="newGame()">↺ New Game</button>
+  </div>
+
+  <!-- REVIEW BTN -->
+  <button id="review-btn" onclick="openReview()" style="display:none">
+    📖 複習模式 — <span id="review-cnt">0</span> 個單字待複習
+  </button>
+
+  <!-- TARGETS -->
+  <div class="targets-panel">
+    <span class="targets-head">📋 Words to Find</span>
+    <div class="targets-layers" id="targets-layers"></div>
+  </div>
+
+  <!-- FOUND -->
+  <div class="found-panel">
+    <span class="found-head">✅ Found Words</span>
+    <div class="found-list" id="found-list"></div>
+    <div class="prog-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
+<!-- ═══ INLINE LEVEL DATA ═══════════════════════════════ -->
+<script>
+// ── EMOJI MAP ────────────────────────────────────────────
+const EMOJI_MAP = {
+  CAT:'🐱',DOG:'🐶',COW:'🐄',PIG:'🐷',HEN:'🐔',ANT:'🐜',BEE:'🐝',OWL:'🦉',
+  FOX:'🦊',YAK:'🐃',RAM:'🐏',EMU:'🐦',
+  BIRD:'🐦',FISH:'🐟',FROG:'🐸',BEAR:'🐻',DUCK:'🦆',WOLF:'🐺',
+  LION:'🦁',DEER:'🦌',CRAB:'🦀',SWAN:'🦢',TOAD:'🐸',MOLE:'🦫',HARE:'🐇',WORM:'🪱',
+  EAGLE:'🦅',SHARK:'🦈',TIGER:'🐯',HORSE:'🐴',SHEEP:'🐑',MOUSE:'🐭',SNAKE:'🐍',
+  WHALE:'🐋',OTTER:'🦦',PANDA:'🐼',ZEBRA:'🦓',KOALA:'🐨',SQUID:'🦑',
+  RABBIT:'🐰',PARROT:'🦜',TURTLE:'🐢',LIZARD:'🦎',DONKEY:'🫏',MONKEY:'🐒',SPIDER:'🕷️',
+  HAMSTER:'🐹',PENGUIN:'🐧',DOLPHIN:'🐬',LOBSTER:'🦞',CHEETAH:'🐆',GORILLA:'🦍',GIRAFFE:'🦒',CHICKEN:'🐓',
+  EGG:'🥚',JAM:'🍯',NUT:'🥜',OAT:'🌾',FIG:'🍑',YAM:'🍠',
+  CAKE:'🎂',MILK:'🥛',RICE:'🍚',BEAN:'🫘',CORN:'🌽',PEAR:'🍐',PLUM:'🍑',LIME:'🍋',
+  SOUP:'🍲',TOFU:'🥡',BEEF:'🥩',PORK:'🥩',LAMB:'🍖',WINE:'🍷',BEER:'🍺',
+  APPLE:'🍎',BREAD:'🍞',GRAPE:'🍇',LEMON:'🍋',MANGO:'🥭',HONEY:'🍯',JUICE:'🧃',PIZZA:'🍕',
+  STEAK:'🥩',SALAD:'🥗',PASTA:'🍝',SUSHI:'🍣',DONUT:'🍩',CANDY:'🍬',CREAM:'🍦',BACON:'🥓',
+  BUTTER:'🧈',COOKIE:'🍪',WAFFLE:'🧇',NOODLE:'🍜',CHEESE:'🧀',COFFEE:'☕',SALMON:'🐟',ALMOND:'🌰',
+  SUN:'☀️',ICE:'🧊',FOG:'🌫️',DEW:'💧',
+  RAIN:'🌧️',SNOW:'❄️',WIND:'🌬️',TREE:'🌳',LEAF:'🍃',FIRE:'🔥',WAVE:'🌊',SAND:'🏜️',MIST:'🌫️',
+  CLOUD:'☁️',STORM:'⛈️',RIVER:'🏞️',OCEAN:'🌊',EARTH:'🌍',FLAME:'🔥',BLOOM:'🌸',
+  FOREST:'🌲',VALLEY:'🏔️',DESERT:'🏜️',ISLAND:'🏝️',JUNGLE:'🌴',PLANET:'🪐',FLOWER:'🌸',BREEZE:'🌬️',
+  MEADOW:'🌿',VOLCANO:'🌋',RAINBOW:'🌈',SUNRISE:'🌅',THUNDER:'⛈️',
+  KEY:'🔑',BAG:'👜',HAT:'🎩',CUP:'☕',PEN:'🖊️',BED:'🛏️',CAR:'🚗',BUS:'🚌',MAP:'🗺️',JAR:'🫙',
+  BOOK:'📚',BELL:'🔔',BOAT:'⛵',KITE:'🪁',DRUM:'🥁',LAMP:'💡',LOCK:'🔒',RING:'💍',ROPE:'🪢',BOWL:'🍜',DOOR:'🚪',WALL:'🧱',
+  CHAIR:'🪑',CLOCK:'🕐',TABLE:'🪑',PIANO:'🎹',PHONE:'📱',LIGHT:'💡',KNIFE:'🔪',BRUSH:'🖌️',GLASS:'🥛',SHIRT:'👕',SHOES:'👟',
+  CAMERA:'📷',BRIDGE:'🌉',CASTLE:'🏰',GARDEN:'🌷',MARKET:'🏬',PENCIL:'✏️',BOTTLE:'🍶',BASKET:'🧺',HELMET:'⛑️',MIRROR:'🪞',CANDLE:'🕯️',
+  BLANKET:'🛏️',LANTERN:'🏮',COMPASS:'🧭',SHELTER:'🏠',PRINTER:'🖨️',CABINET:'🗄️',
+  RUN:'🏃',FLY:'🦅',CRY:'😢',HUG:'🤗',WIN:'🏆',
+  WALK:'🚶',JUMP:'🦘',SING:'🎤',COOK:'👨‍🍳',READ:'📖',SWIM:'🏊',HELP:'🆘',LOVE:'❤️',PLAY:'🎮',
+  DANCE:'💃',LAUGH:'😂',SLEEP:'😴',DREAM:'💭',BUILD:'🏗️',CLIMB:'🧗',WRITE:'✍️',STUDY:'📚',SHARE:'🤝',LEARN:'🎓',
+  TRAVEL:'✈️',CREATE:'🎨',EXPLORE:'🔭',ACHIEVE:'🏆',CONNECT:'🔗',
+  BIG:'📏',HOT:'🌡️',OLD:'👴',NEW:'✨',
+  FAST:'⚡',SLOW:'🐢',TALL:'📏',SMALL:'🔬',HAPPY:'😊',BRAVE:'🦁',SMART:'🧠',
+  HOME:'🏠',CITY:'🏙️',FARM:'🌾',PARK:'🌳',SHOP:'🏪',BANK:'🏦',CAFE:'☕',ROAD:'🛣️',
+  HOTEL:'🏨',STORE:'🏪',BEACH:'🏖️',TRAIN:'🚆',MONEY:'💰',SPORT:'⚽',NIGHT:'🌙',
+  SCHOOL:'🏫',HOSPITAL:'🏥',LIBRARY:'📚',AIRPORT:'✈️',
+  BOY:'👦',MAN:'👨',DAD:'👨',MOM:'👩',KID:'👶',
+  BABY:'👶',GIRL:'👧',LADY:'👩',KING:'👑',HERO:'🦸',
+  CHILD:'👧',WOMAN:'👩',ELDER:'👴',QUEEN:'👑',NURSE:'👩‍⚕️',
+  TEACHER:'👩‍🏫',FRIEND:'🤝',FAMILY:'👨‍👩‍👧',
+  EXAM:'📝',TEST:'📝',NOTE:'📝',WORD:'🔤',CLASS:'🏫',GRADE:'📊',SCORE:'🏆',TOPIC:'💬',ESSAY:'📄',SPELL:'🔤',
+  LESSON:'📚',GRAMMAR:'📖',
+  JOY:'😊',AWE:'😮',FEAR:'😨',HOPE:'🌈',CALM:'😌',ANGER:'😠',GRIEF:'😢',PRIDE:'🦁',
+  TRUST:'🤝',PEACE:'☮️',BLISS:'😇',WORRY:'😟',
+  DAY:'📅',AGE:'⏳',ERA:'⌛',WEEK:'📅',YEAR:'📅',HOUR:'🕐',TIME:'⏰',DAWN:'🌅',DUSK:'🌆',
+  MONTH:'📅',SEASON:'🍂',MORNING:'☀️',EVENING:'🌆',
+  APP:'📱',WEB:'🌐',NET:'🌐',CODE:'💻',DATA:'💾',WIFI:'📶',CHIP:'💻',
+  EMAIL:'📧',VIDEO:'🎥',ROBOT:'🤖',SCREEN:'🖥️',SOFTWARE:'💿',INTERNET:'🌐',KEYBOARD:'⌨️',
+  GYM:'💪',YOGA:'🧘',DIET:'🥗',HEALTH:'❤️',DOCTOR:'👨‍⚕️',WORKOUT:'💪',FITNESS:'🏋️',VITAMIN:'💊',
+  MEDICINE:'💊',EXERCISE:'🏃',GRATITUDE:'🙏',EXCITEMENT:'🎉',
+};
+
+const ZH = {
+  CAT:'貓',DOG:'狗',COW:'牛',PIG:'豬',HEN:'母雞',ANT:'螞蟻',BEE:'蜜蜂',OWL:'貓頭鷹',
+  FOX:'狐狸',YAK:'氂牛',RAM:'公羊',EMU:'鴯鶓',
+  BIRD:'鳥',FISH:'魚',FROG:'青蛙',BEAR:'熊',DUCK:'鴨子',WOLF:'狼',
+  LION:'獅子',DEER:'鹿',CRAB:'螃蟹',SWAN:'天鵝',TOAD:'蟾蜍',MOLE:'鼴鼠',HARE:'野兔',WORM:'蟲',
+  EAGLE:'老鷹',SHARK:'鯊魚',TIGER:'老虎',HORSE:'馬',SHEEP:'綿羊',MOUSE:'老鼠',SNAKE:'蛇',
+  WHALE:'鯨魚',OTTER:'水獺',PANDA:'熊貓',ZEBRA:'斑馬',KOALA:'無尾熊',SQUID:'烏賊',
+  RABBIT:'兔子',PARROT:'鸚鵡',TURTLE:'烏龜',LIZARD:'蜥蜴',DONKEY:'驢子',MONKEY:'猴子',SPIDER:'蜘蛛',
+  HAMSTER:'倉鼠',PENGUIN:'企鵝',DOLPHIN:'海豚',LOBSTER:'龍蝦',CHEETAH:'獵豹',GORILLA:'大猩猩',GIRAFFE:'長頸鹿',CHICKEN:'雞',
+  EGG:'蛋',JAM:'果醬',NUT:'堅果',OAT:'燕麥',FIG:'無花果',YAM:'山藥',
+  CAKE:'蛋糕',MILK:'牛奶',RICE:'米飯',BEAN:'豆子',CORN:'玉米',PEAR:'梨子',PLUM:'梅子',LIME:'萊姆',
+  SOUP:'湯',TOFU:'豆腐',BEEF:'牛肉',PORK:'豬肉',LAMB:'羊肉',WINE:'葡萄酒',BEER:'啤酒',
+  APPLE:'蘋果',BREAD:'麵包',GRAPE:'葡萄',LEMON:'檸檬',MANGO:'芒果',HONEY:'蜂蜜',JUICE:'果汁',PIZZA:'披薩',
+  STEAK:'牛排',SALAD:'沙拉',PASTA:'義大利麵',SUSHI:'壽司',DONUT:'甜甜圈',CANDY:'糖果',CREAM:'奶油',BACON:'培根',
+  BUTTER:'奶油',COOKIE:'餅乾',WAFFLE:'鬆餅',NOODLE:'麵條',CHEESE:'起司',COFFEE:'咖啡',SALMON:'鮭魚',ALMOND:'杏仁',
+  SUN:'太陽',ICE:'冰',FOG:'霧',DEW:'露水',
+  RAIN:'雨',SNOW:'雪',WIND:'風',TREE:'樹',LEAF:'葉子',FIRE:'火',WAVE:'海浪',SAND:'沙',MIST:'薄霧',
+  CLOUD:'雲',STORM:'暴風雨',RIVER:'河流',OCEAN:'海洋',EARTH:'地球',FLAME:'火焰',BLOOM:'花朵',
+  FOREST:'森林',VALLEY:'山谷',DESERT:'沙漠',ISLAND:'島嶼',JUNGLE:'叢林',PLANET:'星球',FLOWER:'花',BREEZE:'微風',
+  MEADOW:'草地',VOLCANO:'火山',RAINBOW:'彩虹',SUNRISE:'日出',THUNDER:'雷聲',
+  KEY:'鑰匙',BAG:'包包',HAT:'帽子',CUP:'杯子',PEN:'筆',BED:'床',CAR:'汽車',BUS:'公車',MAP:'地圖',JAR:'罐子',
+  BOOK:'書',BELL:'鈴鐺',BOAT:'船',KITE:'風箏',DRUM:'鼓',LAMP:'燈',LOCK:'鎖',RING:'戒指',ROPE:'繩子',BOWL:'碗',DOOR:'門',WALL:'牆',
+  CHAIR:'椅子',CLOCK:'時鐘',TABLE:'桌子',PIANO:'鋼琴',PHONE:'電話',LIGHT:'燈光',KNIFE:'刀',BRUSH:'刷子',GLASS:'玻璃杯',SHIRT:'襯衫',SHOES:'鞋子',
+  CAMERA:'相機',BRIDGE:'橋',CASTLE:'城堡',GARDEN:'花園',MARKET:'市場',PENCIL:'鉛筆',BOTTLE:'瓶子',BASKET:'籃子',HELMET:'頭盔',MIRROR:'鏡子',CANDLE:'蠟燭',
+  BLANKET:'毯子',LANTERN:'燈籠',COMPASS:'指南針',SHELTER:'庇護所',PRINTER:'印表機',CABINET:'櫃子',
+  RUN:'跑',FLY:'飛',CRY:'哭',HUG:'擁抱',WIN:'贏',
+  WALK:'走路',JUMP:'跳',SING:'唱歌',COOK:'烹飪',READ:'閱讀',SWIM:'游泳',HELP:'幫助',LOVE:'愛',PLAY:'玩',
+  DANCE:'跳舞',LAUGH:'大笑',SLEEP:'睡覺',DREAM:'夢想',BUILD:'建造',CLIMB:'攀爬',WRITE:'寫',STUDY:'學習',SHARE:'分享',LEARN:'學習',
+  TRAVEL:'旅行',CREATE:'創造',EXPLORE:'探索',ACHIEVE:'達成',CONNECT:'連結',
+  BIG:'大的',HOT:'熱的',OLD:'老的',NEW:'新的',
+  FAST:'快的',SLOW:'慢的',TALL:'高的',SMALL:'小的',HAPPY:'快樂的',BRAVE:'勇敢的',SMART:'聰明的',
+  HOME:'家',CITY:'城市',FARM:'農場',PARK:'公園',SHOP:'商店',BANK:'銀行',CAFE:'咖啡廳',ROAD:'道路',
+  HOTEL:'旅館',STORE:'商店',BEACH:'海灘',TRAIN:'火車',MONEY:'錢',SPORT:'運動',NIGHT:'夜晚',
+  SCHOOL:'學校',HOSPITAL:'醫院',LIBRARY:'圖書館',AIRPORT:'機場',
+  BOY:'男孩',MAN:'男人',DAD:'爸爸',MOM:'媽媽',KID:'小孩',
+  BABY:'嬰兒',GIRL:'女孩',LADY:'女士',KING:'國王',HERO:'英雄',
+  CHILD:'孩子',WOMAN:'女人',ELDER:'長輩',QUEEN:'女王',NURSE:'護士',
+  TEACHER:'老師',FRIEND:'朋友',FAMILY:'家人',
+  EXAM:'考試',TEST:'測驗',NOTE:'筆記',WORD:'單字',CLASS:'班級',GRADE:'年級',SCORE:'分數',TOPIC:'主題',ESSAY:'作文',SPELL:'拼字',
+  LESSON:'課程',GRAMMAR:'文法',
+  JOY:'喜悅',AWE:'敬畏',FEAR:'恐懼',HOPE:'希望',CALM:'平靜',ANGER:'憤怒',GRIEF:'悲傷',PRIDE:'驕傲',
+  TRUST:'信任',PEACE:'和平',BLISS:'幸福',WORRY:'擔心',
+  DAY:'天',AGE:'年齡',ERA:'時代',WEEK:'週',YEAR:'年',HOUR:'小時',TIME:'時間',DAWN:'黎明',DUSK:'黃昏',
+  MONTH:'月份',SEASON:'季節',MORNING:'早晨',EVENING:'傍晚',
+  APP:'應用程式',WEB:'網路',NET:'網路',CODE:'程式碼',DATA:'資料',WIFI:'無線網路',CHIP:'晶片',
+  EMAIL:'電子郵件',VIDEO:'影片',ROBOT:'機器人',SCREEN:'螢幕',SOFTWARE:'軟體',INTERNET:'網際網路',KEYBOARD:'鍵盤',
+  GYM:'健身房',YOGA:'瑜伽',DIET:'飲食',HEALTH:'健康',DOCTOR:'醫生',WORKOUT:'鍛煉',FITNESS:'健身',VITAMIN:'維生素',
+  MEDICINE:'藥',EXERCISE:'運動',GRATITUDE:'感恩',EXCITEMENT:'興奮',
+};
+
+// ── LEVEL DATABASE (20 levels per mode) ──────────────────
+const LEVELS_DB = {
+  kids:{
+    name:'Kids 🧸',timeLimit:0,
+    levels:[
+      [{cols:3,words:['CAT','DOG','SUN']}],
+      [{cols:3,words:['BEE','ANT','OWL']}],
+      [{cols:4,words:['BIRD','FISH','FROG']}],
+      [{cols:4,words:['BEAR','DUCK','WOLF']}],
+      [{cols:4,words:['LION','DEER','CRAB']}],
+      [{cols:4,words:['CAT','DOG','HEN','FOX']},{cols:3,words:['BEE','ANT','OWL']}],
+      [{cols:4,words:['BIRD','FISH','FROG','BEAR']},{cols:3,words:['CAT','DOG','SUN']}],
+      [{cols:4,words:['BOOK','TREE','STAR','CAKE']},{cols:3,words:['BEE','ANT','FOX']}],
+      [{cols:4,words:['DUCK','WOLF','LION','DEER']},{cols:3,words:['OWL','HEN','COW']}],
+      [{cols:4,words:['SWAN','TOAD','MOLE','HARE']},{cols:3,words:['CAT','BEE','ANT']}],
+      [{cols:5,words:['APPLE','GRAPE','LEMON','MANGO']},{cols:3,words:['CAT','DOG','SUN']}],
+      [{cols:5,words:['TIGER','HORSE','SHEEP','MOUSE']},{cols:3,words:['BEE','ANT','OWL']}],
+      [{cols:5,words:['EAGLE','SHARK','WHALE','OTTER']},{cols:3,words:['FOX','COW','HEN']}],
+      [{cols:5,words:['PIANO','CHAIR','CLOCK','BREAD']},{cols:3,words:['CAT','SUN','BEE']}],
+      [{cols:5,words:['PANDA','ZEBRA','KOALA','SQUID']},{cols:4,words:['BEAR','DUCK','WOLF','LION']}],
+      [{cols:5,words:['APPLE','GRAPE','LEMON','HONEY','STEAK']},{cols:4,words:['BEAR','DUCK','WOLF','BIRD']},{cols:2,words:['CAT','DOG']}],
+      [{cols:5,words:['TIGER','HORSE','SHEEP','MOUSE','EAGLE']},{cols:4,words:['FISH','FROG','LION','DEER']},{cols:2,words:['BEE','ANT']}],
+      [{cols:6,words:['RABBIT','PARROT','TURTLE','LIZARD','MONKEY']},{cols:4,words:['PANDA','ZEBRA','KOALA','SWAN']},{cols:3,words:['CAT','DOG','HEN']}],
+      [{cols:6,words:['HAMSTER','PENGUIN','DOLPHIN','LOBSTER','CHICKEN']},{cols:4,words:['BEAR','WOLF','LION','DEER']},{cols:2,words:['BEE','ANT']}],
+      [{cols:6,words:['GIRAFFE','GORILLA','CHEETAH','PENGUIN','LOBSTER']},{cols:5,words:['RABBIT','PARROT','TURTLE','EAGLE','SHARK']},{cols:3,words:['CAT','DOG','OWL']}],
+    ]
+  },
+  a1:{
+    name:'A1 入門',timeLimit:120,
+    levels:[
+      [{cols:4,words:['CAT','DOG','SUN','BEE','ANT']}],
+      [{cols:4,words:['RUN','FLY','CRY','HUG','WIN']}],
+      [{cols:4,words:['BOY','MAN','DAD','MOM','KID']}],
+      [{cols:4,words:['BIG','HOT','OLD','NEW','MAP']}],
+      [{cols:4,words:['KEY','BAG','HAT','CUP','PEN']}],
+      [{cols:4,words:['HOME','CITY','FARM','PARK']},{cols:3,words:['CAT','DOG','SUN']}],
+      [{cols:4,words:['BOOK','BELL','BOAT','KITE']},{cols:3,words:['BEE','ANT','RUN']}],
+      [{cols:4,words:['WALK','JUMP','SING','COOK']},{cols:3,words:['DAD','MOM','KID']}],
+      [{cols:4,words:['RAIN','SNOW','WIND','TREE']},{cols:3,words:['SUN','FOX','OWL']}],
+      [{cols:4,words:['DOOR','WALL','LAMP','LOCK']},{cols:3,words:['KEY','BAG','CUP']}],
+      [{cols:5,words:['HAPPY','BRAVE','SMART','DANCE','LAUGH']},{cols:3,words:['RUN','FLY','CRY']}],
+      [{cols:5,words:['APPLE','BREAD','HONEY','JUICE','PIZZA']},{cols:3,words:['EGG','JAM','NUT']}],
+      [{cols:5,words:['HOTEL','STORE','BEACH','TRAIN','MONEY']},{cols:3,words:['PARK','FARM','SHOP']}],
+      [{cols:5,words:['SLEEP','DREAM','BUILD','CLIMB','WRITE']},{cols:3,words:['RUN','WIN','HUG']}],
+      [{cols:5,words:['EAGLE','SHARK','TIGER','HORSE','SHEEP']},{cols:4,words:['BIRD','FISH','BEAR','DUCK']}],
+      [{cols:5,words:['SMALL','LIGHT','CLOCK','CHAIR','PIANO']},{cols:4,words:['BOOK','KITE','DRUM','BELL']},{cols:2,words:['CAT','DOG']}],
+      [{cols:5,words:['STEAK','SALAD','PASTA','DONUT','CANDY']},{cols:4,words:['CAKE','MILK','RICE','BEAN']},{cols:2,words:['EGG','NUT']}],
+      [{cols:5,words:['SPORT','NIGHT','RIVER','OCEAN','CLOUD']},{cols:4,words:['RAIN','SNOW','WIND','FIRE']},{cols:2,words:['SUN','ICE']}],
+      [{cols:6,words:['RABBIT','PARROT','TURTLE','MONKEY','LIZARD']},{cols:4,words:['BEAR','WOLF','LION','DUCK']},{cols:3,words:['CAT','DOG','BEE']}],
+      [{cols:6,words:['BUTTER','COOKIE','WAFFLE','NOODLE','CHEESE','COFFEE']},{cols:4,words:['CAKE','MILK','RICE','CORN']},{cols:3,words:['EGG','JAM','NUT']}],
+    ]
+  },
+  a2:{
+    name:'A2 初級',timeLimit:90,
+    levels:[
+      [{cols:5,words:['HOTEL','STORE','BEACH','TRAIN','MONEY']}],
+      [{cols:5,words:['SLEEP','SPORT','NIGHT','LIGHT','BREAD']}],
+      [{cols:5,words:['PHONE','DANCE','GLASS','CREAM','BACON']}],
+      [{cols:5,words:['SMALL','HAPPY','BRAVE','SMART','FRUIT']}],
+      [{cols:5,words:['CHAIR','CLOCK','TABLE','PIANO','BRUSH']}],
+      [{cols:5,words:['HOTEL','TRAIN','BEACH','MONEY','STORE']},{cols:3,words:['HOME','PARK','CAFE']}],
+      [{cols:5,words:['BUTTER','COFFEE','CHEESE','SALMON','ALMOND']},{cols:3,words:['EGG','JAM','NUT']}],
+      [{cols:5,words:['CAMERA','BRIDGE','CASTLE','GARDEN','MARKET']},{cols:4,words:['BOOK','LAMP','DOOR','CLOCK']}],
+      [{cols:5,words:['RABBIT','PARROT','TURTLE','MONKEY','PANDA']},{cols:4,words:['BEAR','WOLF','LION','DEER']}],
+      [{cols:5,words:['FOREST','VALLEY','DESERT','ISLAND','JUNGLE']},{cols:4,words:['RAIN','SNOW','WIND','FIRE']}],
+      [{cols:6,words:['BUTTER','COOKIE','WAFFLE','NOODLE','CHEESE']},{cols:4,words:['CAKE','MILK','RICE','BEAN']},{cols:2,words:['EGG','JAM']}],
+      [{cols:6,words:['CAMERA','BRIDGE','CASTLE','GARDEN','PENCIL']},{cols:4,words:['BOOK','LAMP','DOOR','BELL']},{cols:3,words:['KEY','BAG','PEN']}],
+      [{cols:6,words:['DOCTOR','SCHOOL','MARKET','CASTLE','BRIDGE']},{cols:4,words:['HOME','CITY','PARK','SHOP']},{cols:3,words:['DAD','MOM','KID']}],
+      [{cols:6,words:['BLANKET','LANTERN','COMPASS','SHELTER','PRINTER']},{cols:4,words:['LAMP','LOCK','RING','ROPE']},{cols:3,words:['KEY','BAG','CUP']}],
+      [{cols:6,words:['HAMSTER','PENGUIN','DOLPHIN','LOBSTER','GORILLA']},{cols:5,words:['EAGLE','SHARK','TIGER','HORSE','SHEEP']},{cols:3,words:['CAT','DOG','BEE']}],
+      [{cols:6,words:['MORNING','EVENING','SUNRISE','RAINBOW','THUNDER']},{cols:5,words:['CLOUD','STORM','RIVER','OCEAN','FLAME']},{cols:3,words:['SUN','ICE','FOG']}],
+      [{cols:6,words:['TEACHER','SCHOOL','LIBRARY','AIRPORT','HOSPITAL']},{cols:4,words:['HOME','CITY','PARK','BANK']},{cols:3,words:['SHOP','CAFE','FARM']}],
+      [{cols:6,words:['FITNESS','WORKOUT','VITAMIN','MEDICINE','EXERCISE']},{cols:4,words:['YOGA','DIET','HEALTH','SLEEP']},{cols:2,words:['GYM','RUN']}],
+      [{cols:7,words:['CHEETAH','GORILLA','GIRAFFE','PENGUIN','LOBSTER','DOLPHIN']},{cols:5,words:['EAGLE','SHARK','TIGER','HORSE','PANDA']},{cols:3,words:['FOX','OWL','BEE']}],
+      [{cols:7,words:['CABINET','PRINTER','COMPASS','LANTERN','BLANKET','SHELTER']},{cols:5,words:['CLOCK','CHAIR','TABLE','PIANO','BRUSH']},{cols:3,words:['KEY','CUP','PEN']}],
+    ]
+  },
+  b1:{
+    name:'B1 中級',timeLimit:75,
+    levels:[
+      [{cols:6,words:['TRAVEL','MARKET','BRIDGE','PLANET','FOREST']}],
+      [{cols:6,words:['CAMERA','ISLAND','SAFETY','TICKET','BUTTER']}],
+      [{cols:6,words:['GARDEN','VALLEY','CASTLE','FLOWER','BREEZE']}],
+      [{cols:6,words:['RABBIT','PARROT','TURTLE','MONKEY','LIZARD']}],
+      [{cols:6,words:['MORNING','EVENING','RAINBOW','VOLCANO','MEADOW']}],
+      [{cols:6,words:['TRAVEL','MARKET','BRIDGE','PLANET','FOREST']},{cols:4,words:['BOOK','LAMP','DOOR','CLOCK']}],
+      [{cols:6,words:['TEACHER','SCHOOL','LIBRARY','AIRPORT','HOSPITAL']},{cols:4,words:['HOME','CITY','PARK','BANK']}],
+      [{cols:6,words:['EXPLORE','ACHIEVE','CONNECT','CREATE','LESSON','GRAMMAR']},{cols:4,words:['EXAM','TEST','NOTE','WORD']}],
+      [{cols:6,words:['VOLCANO','RAINBOW','SUNRISE','THUNDER','MEADOW']},{cols:5,words:['CLOUD','STORM','RIVER','OCEAN','FLAME']}],
+      [{cols:6,words:['CHEETAH','GORILLA','GIRAFFE','PENGUIN','LOBSTER']},{cols:5,words:['EAGLE','SHARK','TIGER','HORSE','PANDA']}],
+      [{cols:7,words:['CABINET','PRINTER','COMPASS','LANTERN','BLANKET','SHELTER']},{cols:5,words:['CLOCK','CHAIR','TABLE','PIANO','BRUSH']},{cols:3,words:['KEY','CUP','PEN']}],
+      [{cols:7,words:['HOSPITAL','INTERNET','KEYBOARD','SOFTWARE','EXERCISE','MEDICINE']},{cols:5,words:['PHONE','EMAIL','VIDEO','ROBOT','CHIP']},{cols:3,words:['APP','WEB','NET']}],
+      [{cols:6,words:['EXPLORE','ACHIEVE','CONNECT','CREATE','LESSON']},{cols:4,words:['HOPE','CALM','PEACE','TRUST']},{cols:3,words:['JOY','AWE','DAY']}],
+      [{cols:7,words:['CHEETAH','GORILLA','GIRAFFE','HAMSTER','PENGUIN','DOLPHIN']},{cols:5,words:['RABBIT','PARROT','TURTLE','MONKEY','SPIDER']},{cols:3,words:['CAT','DOG','BEE']}],
+      [{cols:7,words:['MORNING','EVENING','SUNRISE','RAINBOW','THUNDER','VOLCANO']},{cols:6,words:['FOREST','VALLEY','DESERT','ISLAND','JUNGLE','MEADOW']},{cols:3,words:['SUN','ICE','FOG']}],
+      [{cols:8,words:['HOSPITAL','INTERNET','KEYBOARD','SOFTWARE','EXERCISE','MEDICINE','LIBRARY']},{cols:6,words:['CAMERA','BRIDGE','CASTLE','GARDEN','MARKET','PENCIL']},{cols:3,words:['APP','WEB','NET']}],
+      [{cols:7,words:['GRATITUDE','EXCITEMENT','CHEETAH','GORILLA','GIRAFFE']},{cols:6,words:['TRAVEL','MARKET','BRIDGE','FOREST','ISLAND','VALLEY']},{cols:4,words:['HOME','CITY','PARK','BANK']}],
+      [{cols:8,words:['INTERNET','KEYBOARD','SOFTWARE','HOSPITAL','EXERCISE','MEDICINE','LIBRARY']},{cols:6,words:['CAMERA','BRIDGE','GARDEN','MARKET','FOREST','CASTLE']},{cols:4,words:['EXAM','TEST','WORD','NOTE']}],
+      [{cols:8,words:['GRATITUDE','EXCITEMENT','DOLPHIN','LOBSTER','GORILLA','GIRAFFE','PENGUIN']},{cols:6,words:['RABBIT','PARROT','TURTLE','MONKEY','LIZARD','SPIDER']},{cols:3,words:['CAT','DOG','OWL']}],
+      [{cols:8,words:['INTERNET','KEYBOARD','HOSPITAL','SOFTWARE','EXERCISE','MEDICINE','LIBRARY','GRATITUDE']},{cols:6,words:['CAMERA','BRIDGE','CASTLE','GARDEN','FOREST','ISLAND']},{cols:4,words:['HOPE','CALM','TRUST','PEACE']}],
+    ]
+  }
+};
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let diff = 'kids';
+let levelIdx = 0;
+let layers = [];
+let slot = [];
+let found = [];       // array of {word, layerIdx}  ← BUGFIX: track layer too
+let score = 0;
+let hintsLeft = 3;
+let timeLeft = 0;
+let timerInt = null;
+let active = false;
+let hintCells = [];
+let totalWords = 0;
+
+// SR system
+let srData = {};     // { word: { seen:N, wrong:N, nextReview: timestamp } }
+function loadSR(){ try{ srData = JSON.parse(localStorage.getItem('ws_sr')||'{}'); }catch(e){srData={};} }
+function saveSR(){ localStorage.setItem('ws_sr', JSON.stringify(srData)); }
+function markWordSeen(word){ if(!srData[word]) srData[word]={seen:0,wrong:0,nextReview:0}; srData[word].seen++; saveSR(); }
+function markWordWrong(word){ if(!srData[word]) srData[word]={seen:0,wrong:0,nextReview:0}; srData[word].wrong++; const days=Math.max(1,3-srData[word].seen); srData[word].nextReview=Date.now()+days*86400000; saveSR(); }
+function getReviewWords(){ const now=Date.now(); return Object.keys(srData).filter(w=>srData[w].nextReview>0&&srData[w].nextReview<=now); }
+
+// Leaderboard
+let leaderboard = [];
+function loadLB(){ try{ leaderboard=JSON.parse(localStorage.getItem('ws_lb')||'[]'); }catch(e){leaderboard=[];} }
+function saveLB(){ localStorage.setItem('ws_lb',JSON.stringify(leaderboard)); }
+function addLBEntry(name,d,lv,sc,t){
+  leaderboard.push({name,diff:d,level:lv,score:sc,time:t,date:new Date().toLocaleDateString('zh-TW')});
+  leaderboard.sort((a,b)=>b.score-a.score);
+  if(leaderboard.length>100) leaderboard=leaderboard.slice(0,100);
+  saveLB();
+}
+
+// ════════════════════════════════════════════════════════════
+// TTS — speak EN then ZH
+// ════════════════════════════════════════════════════════════
+function speak(word){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const zh = ZH[word]||'';
+  const u1 = new SpeechSynthesisUtterance(word.toLowerCase());
+  u1.lang='en-US'; u1.rate=0.85;
+  if(zh){
+    const u2 = new SpeechSynthesisUtterance(zh);
+    u2.lang='zh-TW'; u2.rate=0.9;
+    u1.onend = ()=>{ setTimeout(()=>speechSynthesis.speak(u2),250); };
+  }
+  speechSynthesis.speak(u1);
+}
+
+// ════════════════════════════════════════════════════════════
+// GAME INIT
+// ════════════════════════════════════════════════════════════
+function setDiff(d){
+  diff=d;levelIdx=0;
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.toggle('active',b.dataset.d===d));
+  newGame();
+}
+
+function newGame(){
+  clearInterval(timerInt);
+  clearHintGlow();
+  slot=[];found=[];score=0;hintsLeft=3;active=true;
+  loadSR(); loadLB();
+
+  const db = LEVELS_DB[diff];
+  const levelDef = db.levels[levelIdx % db.levels.length];
+
+  layers = levelDef.map((def,li)=>{
+    const {cols,words} = def;
+    let letters=[];
+    words.forEach(w=>w.split('').forEach(l=>letters.push({letter:l,word:w})));
+    const total=cols*cols;
+    while(letters.length<total) letters.push({letter:'',word:''});
+    shuffle(letters);
+    return {
+      cols, words:[...words],
+      cells: letters.map((l,ci)=>({letter:l.letter,word:l.word,layerIdx:li,cellIdx:ci,matched:false,empty:l.letter===''}))
+    };
+  });
+
+  totalWords = layers.reduce((s,l)=>s+l.words.length,0);
+  updateLocked();
+  checkSRBanner();
+
+  document.getElementById('level-tag').textContent=`${db.name} · LV ${levelIdx+1}`;
+  document.getElementById('hint-cnt').textContent=`(${hintsLeft})`;
+  timeLeft = db.timeLimit;
+  updateStats();
+  renderScene();
+  renderSlot();
+  renderTargets();
+  renderFound();
+  updateReviewBtn();
+
+  if(diff!=='kids'&&timeLeft>0){
+    timerInt=setInterval(tick,1000);
+  }
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+}
+
+function updateLocked(){
+  layers.forEach((layer,li)=>{
+    layer.cells.forEach(cell=>{
+      if(cell.empty||cell.matched){cell.locked=false;return;}
+      let locked=false;
+      for(let hi=li+1;hi<layers.length;hi++){
+        const upper=layers[hi];
+        if(!upper.cells.some(c=>!c.matched&&!c.empty)) continue;
+        const row=Math.floor(cell.cellIdx/layer.cols);
+        const col=cell.cellIdx%layer.cols;
+        const offset=Math.floor((layer.cols-upper.cols)/2);
+        if(row>=offset&&row<offset+upper.cols&&col>=offset&&col<offset+upper.cols){locked=true;break;}
+      }
+      cell.locked=locked;
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════
+const L_NAMES=['Base','Mid','Top'];
+const BADGE_CLS=['lb-1','lb-2','lb-3'];
+const GC_CLS=['gc-1','gc-2','gc-3'];
+const TILE_CLS=['t1','t2','t3'];
+const PILL_CLS=['sp-1','sp-2','sp-3'];
+const TLT_CLS=['tlt-1','tlt-2','tlt-3'];
+
+function renderScene(){
+  const scene=document.getElementById('scene');
+  scene.innerHTML='';
+  [...layers.keys()].reverse().forEach((li,ri)=>{
+    const layer=layers[li];
+    const wrap=document.createElement('div'); wrap.className='layer-wrap';
+
+    // Label
+    const lbl=document.createElement('div'); lbl.className='layer-label';
+    const badge=document.createElement('span'); badge.className='layer-badge '+BADGE_CLS[Math.min(li,2)];
+    const cleared=layer.cells.every(c=>c.matched||c.empty);
+    badge.textContent=(li===layers.length-1?'🏔 ':'')+(li===0?'🔵 Base':`${li===1?'🟣 Mid':'🟡 Top'}`)+
+      (li===layers.length-1&&li>0?' (Top)':'')+(cleared?' ✓':'');
+    lbl.appendChild(badge);
+    wrap.appendChild(lbl);
+
+    // Grid container
+    const gc=document.createElement('div');
+    gc.className='grid-container '+GC_CLS[Math.min(li,2)];
+    if(cleared) gc.classList.add('gc-cleared');
+
+    const grid=document.createElement('div');
+    grid.className='grid'; grid.id=`grid-${li}`;
+    grid.style.gridTemplateColumns=`repeat(${layer.cols},var(--tile-size))`;
+
+    layer.cells.forEach((cell,ci)=>{
+      const tile=document.createElement('div');
+      tile.className='tile'; tile.dataset.li=li; tile.dataset.ci=ci;
+
+      if(cell.empty||cell.matched){
+        tile.classList.add('empty');
+      } else {
+        tile.classList.add(TILE_CLS[Math.min(li,2)]);
+        if(cell.locked){
+          tile.classList.add('locked');
+          tile.innerHTML=`<span class="lock-icon">🔒</span><span class="tile-letter">${cell.letter}</span>`;
+        } else {
+          tile.classList.add('free');
+          tile.innerHTML=`
+            <span class="tile-emoji">${EMOJI_MAP[cell.word]||'🔤'}</span>
+            <span class="tile-letter">${cell.letter}</span>
+            <span class="tile-sub">${cell.word}</span>
+          `;
+          tile.addEventListener('click',()=>onTileClick(li,ci));
+        }
+        if(slot.some(s=>s.layerIdx===li&&s.cellIdx===ci)) tile.classList.add('selected');
+      }
+      grid.appendChild(tile);
+    });
+
+    gc.appendChild(grid); wrap.appendChild(gc);
+    if(ri<layers.length-1){ const conn=document.createElement('div'); conn.className='layer-connector'; wrap.appendChild(conn); }
+    scene.appendChild(wrap);
+  });
+}
+
+function getTileEl(li,ci){ return document.querySelector(`.tile[data-li="${li}"][data-ci="${ci}"]`); }
+
+function renderSlot(){
+  const tilesEl=document.getElementById('slot-tiles');
+  const liveEl=document.getElementById('word-live');
+  const pillEl=document.getElementById('slot-pill');
+  tilesEl.innerHTML=''; liveEl.textContent=''; liveEl.className='word-live';
+
+  if(!slot.length){
+    tilesEl.innerHTML='<span class="slot-ph">點選字母，湊成單字後自動消除 ✨</span>';
+    pillEl.textContent='—'; pillEl.className='slot-layer-pill sp-1';
+    return;
+  }
+  const li=slot[0].layerIdx;
+  pillEl.textContent=L_NAMES[Math.min(li,2)]+' Layer';
+  pillEl.className='slot-layer-pill '+PILL_CLS[Math.min(li,2)];
+
+  slot.forEach((item,i)=>{
+    const st=document.createElement('div'); st.className='slot-tile'; st.textContent=item.letter;
+    st.addEventListener('click',()=>removeFromSlot(i)); tilesEl.appendChild(st);
+  });
+
+  checkLiveWord();
+}
+
+function checkLiveWord(){
+  const word=slot.map(x=>x.letter).join('');
+  const liveEl=document.getElementById('word-live');
+  const allWords=layers.flatMap(l=>l.words);
+
+  // ── AUTO-CONFIRM: check if word is valid and not yet found ──
+  const alreadyFound = found.some(f=>f.word===word && f.layerIdx===slot[0]?.layerIdx);
+  if(allWords.includes(word) && !alreadyFound){
+    liveEl.textContent=`✓ "${word}" — 自動消除中...`;
+    liveEl.className='word-live ok';
+    setTimeout(()=>doConfirm(word), 300);
+    return;
+  }
+  if(word.length>=2){
+    const partial=allWords.some(w=>w.startsWith(word)&&!found.some(f=>f.word===w));
+    if(partial){ liveEl.textContent='...繼續選...'; liveEl.className='word-live partial'; return; }
+  }
+  if(word.length>=3){
+    liveEl.textContent='不是目標單字'; liveEl.className='word-live bad';
+  }
+}
+
+function renderTargets(){
+  const el=document.getElementById('targets-layers'); el.innerHTML='';
+  layers.forEach((layer,li)=>{
+    const row=document.createElement('div'); row.className='target-layer-row';
+    const tag=document.createElement('span'); tag.className='tlt '+TLT_CLS[Math.min(li,2)];
+    tag.textContent=L_NAMES[Math.min(li,2)]; row.appendChild(tag);
+    layer.words.forEach(w=>{
+      const isFound=found.some(f=>f.word===w&&f.layerIdx===li);
+      const tw=document.createElement('span');
+      tw.className='tw'+(isFound?' found':'');
+      tw.id=`tw-${w}-${li}`;
+      tw.innerHTML=`${EMOJI_MAP[w]||'🔤'} ${w}`;
+      tw.addEventListener('click',()=>speak(w));
+      row.appendChild(tw);
+    });
+    el.appendChild(row);
+  });
+}
+
+function renderFound(){
+  const el=document.getElementById('found-list'); el.innerHTML='';
+  found.forEach(({word})=>{
+    const t=document.createElement('div'); t.className='ftag';
+    t.innerHTML=`${EMOJI_MAP[word]||'🔤'} ${word}`; el.appendChild(t);
+  });
+  const pct=totalWords?(found.length/totalWords*100):0;
+  document.getElementById('prog-bar').style.width=pct+'%';
+}
+
+function updateStats(){
+  document.getElementById('sv-score').textContent=score;
+  const te=document.getElementById('sv-time');
+  if(diff==='kids'){ te.textContent='∞'; te.className='sval'; }
+  else { te.textContent=timeLeft; te.className='sval'+(timeLeft<=15?' warn':''); }
+  document.getElementById('sv-hints').textContent=hintsLeft;
+  document.getElementById('sv-prog').textContent=`${found.length}/${totalWords}`;
+  document.getElementById('hint-cnt').textContent=`(${hintsLeft})`;
+}
+
+// ════════════════════════════════════════════════════════════
+// INTERACTION
+// ════════════════════════════════════════════════════════════
+function onTileClick(li,ci){
+  if(!active) return;
+  clearHintGlow();
+  const cell=layers[li].cells[ci];
+  if(cell.empty||cell.matched||cell.locked) return;
+
+  if(slot.length>0&&slot[0].layerIdx!==li){
+    showToast('只能選同一層的字母！','t-err'); return;
+  }
+  const ei=slot.findIndex(s=>s.layerIdx===li&&s.cellIdx===ci);
+  if(ei!==-1){ removeFromSlot(ei); return; }
+
+  slot.push({letter:cell.letter,word:cell.word,layerIdx:li,cellIdx:ci});
+  getTileEl(li,ci)?.classList.add('selected');
+  markWordSeen(cell.word);
+  renderSlot();
+}
+
+function removeFromSlot(i){
+  const item=slot[i];
+  getTileEl(item.layerIdx,item.cellIdx)?.classList.remove('selected');
+  slot.splice(i,1);
+  renderSlot();
+}
+
+function clearSlot(){
+  slot.forEach(item=>getTileEl(item.layerIdx,item.cellIdx)?.classList.remove('selected'));
+  slot=[];
+  renderSlot();
+}
+
+// AUTO-CONFIRM handler
+function confirmWord(){ /* now auto, kept for manual use */ }
+
+function doConfirm(word){
+  if(!active) return;
+  const li=slot[0].layerIdx;
+  const alreadyFound=found.some(f=>f.word===word&&f.layerIdx===li);
+  if(alreadyFound){ clearSlot(); return; }
+
+  found.push({word,layerIdx:li});
+  const pts=word.length*10+(hintsLeft*3);
+  score+=pts;
+
+  // SR: correctly found = positive
+  if(srData[word]&&srData[word].wrong>0){ srData[word].wrong=Math.max(0,srData[word].wrong-1); saveSR(); }
+
+  slot.forEach(item=>{
+    const cell=layers[item.layerIdx].cells[item.cellIdx];
+    cell.matched=true;
+    const el=getTileEl(item.layerIdx,item.cellIdx);
+    if(el){ el.classList.remove('selected'); el.classList.add('matched'); }
+  });
+  slot=[];
+
+  speak(word);
+  showToast(`✨ ${word}!  ${ZH[word]||''}  +${pts}pts`,'t-ok');
+
+  setTimeout(()=>{
+    updateLocked();
+    renderScene(); renderSlot(); renderTargets(); renderFound(); updateStats();
+    if(found.length===totalWords) setTimeout(winGame,350);
+  },460);
+}
+
+// ════════════════════════════════════════════════════════════
+// HINT
+// ════════════════════════════════════════════════════════════
+function useHint(){
+  if(!active) return;
+  if(hintsLeft<=0){ showToast('No hints left! 😢','t-err'); return; }
+  clearHintGlow(); clearSlot();
+
+  let hintWord=null,hintLi=-1;
+  for(let li=layers.length-1;li>=0;li--){
+    const layer=layers[li];
+    for(const w of layer.words){
+      if(found.some(f=>f.word===w&&f.layerIdx===li)) continue;
+      const cells=layer.cells.filter(c=>c.word===w&&!c.matched&&!c.empty);
+      if(cells.length>0&&cells.every(c=>!c.locked)){ hintWord=w;hintLi=li;break; }
+    }
+    if(hintWord) break;
+  }
+  if(!hintWord){ showToast('No hintable word!','t-hint'); return; }
+
+  hintCells=[];
+  layers[hintLi].cells.forEach((cell,ci)=>{
+    if(cell.word===hintWord&&!cell.matched&&!cell.empty){
+      hintCells.push({li:hintLi,ci});
+      getTileEl(hintLi,ci)?.classList.add('hint-glow');
+    }
+  });
+
+  hintsLeft--; updateStats();
+  speak(hintWord);
+  const zh=ZH[hintWord]||'';
+  showToast(`🔍 "${hintWord}" ${zh}  (${L_NAMES[Math.min(hintLi,2)]} Layer)`,'t-hint');
+  markWordWrong(hintWord);
+  setTimeout(clearHintGlow,3500);
+}
+
+function clearHintGlow(){
+  hintCells.forEach(({li,ci})=>getTileEl(li,ci)?.classList.remove('hint-glow'));
+  hintCells=[];
+}
+
+// ════════════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════════════
+function tick(){
+  timeLeft--;updateStats();
+  if(timeLeft<=0){ clearInterval(timerInt);active=false;setTimeout(loseGame,200); }
+}
+
+// ════════════════════════════════════════════════════════════
+// WIN / LOSE
+// ════════════════════════════════════════════════════════════
+function winGame(){
+  clearInterval(timerInt);active=false;
+  const bonus=diff==='kids'?0:timeLeft*2; score+=bonus;
+  const stars=hintsLeft===3?'⭐⭐⭐':hintsLeft>=1?'⭐⭐':'⭐';
+  document.getElementById('m-emoji').textContent='🎉';
+  document.getElementById('m-title').textContent='Level Clear!';
+  document.getElementById('m-stars').textContent=stars;
+  document.getElementById('m-score').textContent=`${score} pts`;
+  const db=LEVELS_DB[diff];
+  const nextLv=(levelIdx+1)%db.levels.length;
+  document.getElementById('m-body').innerHTML=
+    `找到所有 ${totalWords} 個單字！${bonus?`<br>⏱ Time bonus: +${bonus}pts`:''}
+     <br>💡 Hints used: ${3-hintsLeft}/3
+     <br>⏭ Next: Level ${nextLv+1}`;
+  document.getElementById('m-name-row').style.display='none';
+  document.getElementById('m-skip-btn').style.display='none';
+  document.getElementById('m-next-btn').textContent='▶ Next Level';
+  document.getElementById('modal').classList.add('show');
+  levelIdx++;
+  addLBEntry('★WIN★',diff,levelIdx,score,timeLeft);
+}
+
+function loseGame(){
+  document.getElementById('m-emoji').textContent='⏰';
+  document.getElementById('m-title').textContent="Time's Up!";
+  document.getElementById('m-stars').textContent=found.length>0?'⭐':'';
+  document.getElementById('m-score').textContent=`${score} pts`;
+  document.getElementById('m-body').innerHTML=`找到 ${found.length}/${totalWords} 個單字<br>Keep practising! 💪`;
+  document.getElementById('m-name-row').style.display='flex';
+  document.getElementById('m-skip-btn').style.display='block';
+  document.getElementById('m-next-btn').textContent='↺ Try Again';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(next){
+  const name=document.getElementById('m-name-input').value.trim();
+  if(name) addLBEntry(name,diff,levelIdx,score,timeLeft);
+  document.getElementById('m-name-input').value='';
+  document.getElementById('modal').classList.remove('show');
+  newGame();
+}
+
+// ════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ════════════════════════════════════════════════════════════
+let lbFilter='all';
+function openLB(){
+  loadLB();
+  renderLB();
+  document.getElementById('lb-modal').classList.add('show');
+}
+function closeLB(){ document.getElementById('lb-modal').classList.remove('show'); }
+function renderLB(){
+  // Filter tabs
+  const fEl=document.getElementById('lb-filter');
+  fEl.innerHTML='';
+  ['all','kids','a1','a2','b1'].forEach(d=>{
+    const t=document.createElement('button');
+    t.className='lb-tab'+(lbFilter===d?' active':'');
+    t.textContent=d==='all'?'All':LEVELS_DB[d]?.name||d.toUpperCase();
+    t.onclick=()=>{ lbFilter=d; renderLB(); };
+    fEl.appendChild(t);
+  });
+  const list=document.getElementById('lb-list');
+  list.innerHTML='';
+  const entries=(lbFilter==='all'?leaderboard:leaderboard.filter(e=>e.diff===lbFilter)).slice(0,20);
+  if(!entries.length){ list.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;">尚無記錄</div>'; return; }
+  entries.forEach((e,i)=>{
+    const row=document.createElement('div'); row.className='lb-row';
+    const rankCls=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    row.innerHTML=`
+      <div class="lb-rank ${rankCls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+      <div class="lb-name">${e.name||'—'}</div>
+      <div class="lb-info">${(LEVELS_DB[e.diff]?.name||e.diff).replace(/ 🧸/,'')}<br>LV${e.level} · ${e.date}</div>
+      <div class="lb-score">${e.score}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// SPACED REPETITION
+// ════════════════════════════════════════════════════════════
+function checkSRBanner(){
+  const rev=getReviewWords();
+  if(rev.length>0){
+    document.getElementById('sr-msg').textContent=`💡 你有 ${rev.length} 個曾出錯的單字需要複習！`;
+    document.getElementById('sr-banner').classList.add('show');
+    updateReviewBtn();
+  }
+}
+function dismissSR(){ document.getElementById('sr-banner').classList.remove('show'); }
+function updateReviewBtn(){
+  const rev=getReviewWords();
+  const btn=document.getElementById('review-btn');
+  document.getElementById('review-cnt').textContent=rev.length;
+  btn.style.display=rev.length>0?'flex':'none';
+}
+function openReview(){
+  const rev=getReviewWords();
+  if(!rev.length){ showToast('目前沒有待複習單字！','t-sr'); return; }
+  // Speak all review words one by one
+  let i=0;
+  function next(){
+    if(i>=rev.length) return;
+    const w=rev[i++];
+    showToast(`複習: ${w} — ${ZH[w]||''}`, 't-sr');
+    speak(w);
+    setTimeout(next, 3000);
+  }
+  next();
+}
+function toggleReview(){ openReview(); }
+
+// ════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════
+let toastT;
+function showToast(msg,cls=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+cls;
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>el.className='',2500);
+}
+
+// ════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════
+loadSR(); loadLB();
+newGame();
+</script>
+</body>
+</html>
