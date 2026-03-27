@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>牧野物語 Pasture Tale</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#fef6e8;--panel:#fff9f0;--border:#e0c898;--border2:#f0ddb0;
+  --text:#3a2a1a;--text2:#6a4a2a;--text3:#9a7a5a;
+  --farm:#5aaa58;--farm-l:#e8f5e0;--farm-d:#3a8a38;
+  --ranch:#d89030;--ranch-l:#fef0d8;--ranch-d:#a86010;
+  --cook:#d04848;--cook-l:#fde8e8;--cook-d:#a02828;
+  --crystal:#8050c8;--crystal-l:#f0e8ff;--crystal-d:#5030a0;
+  --gold:#f0b820;--r:14px;--r2:10px;--r3:7px;
+  --shadow:0 4px 20px rgba(58,42,26,0.15);
+  --shadow2:0 2px 8px rgba(58,42,26,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+
+/* TOP BAR */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:52px;background:rgba(255,249,240,0.96);
+  border-bottom:2px solid var(--border);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:center;padding:0 16px;gap:10px;
+}
+#topbar h1{font-size:18px;font-weight:900;color:var(--text);white-space:nowrap}
+#topbar h1 em{color:var(--farm-d);font-style:normal}
+.stat{display:flex;align-items:center;gap:5px;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:4px 10px;font-size:13px;font-weight:800}
+.stat-icon{font-size:14px}
+#save-btn{margin-left:auto;background:var(--farm);color:white;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-family:'Nunito',sans-serif;font-weight:800;cursor:pointer;transition:all .2s}
+#save-btn:hover{background:var(--farm-d);transform:scale(1.04)}
+#admin-btn{background:var(--text3);color:white;border:none;border-radius:20px;padding:5px 12px;font-size:11px;font-family:'Nunito',sans-serif;font-weight:700;cursor:pointer;transition:all .2s}
+#admin-btn:hover{background:var(--text2)}
+#save-ok{font-size:11px;color:var(--text3);opacity:0;transition:opacity .5s}
+#save-ok.show{opacity:1}
+
+/* LAYOUT */
+#app{margin-top:52px;height:calc(100vh - 52px);display:grid;grid-template-columns:220px 1fr 260px}
+
+/* LEFT */
+#left{background:var(--panel);border-right:2px solid var(--border);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.panel-hd{font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:2px 4px}
+.mini-card{background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r3);padding:7px 9px;font-size:11px;transition:border-color .2s}
+.mini-card:hover{border-color:var(--border)}
+.mini-card-name{font-weight:900;font-size:12px;color:var(--text)}
+.mini-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.tag{font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px;background:var(--border2);color:var(--text2)}
+.tag.r0{background:#e0f0d8;color:#3a6a28}.tag.r1{background:#daeaff;color:#2a5aaa}
+.tag.r2{background:#eedaff;color:#6030a0}.tag.r3{background:#fff0c8;color:#8a6000}
+.tag.r4{background:#ffd8d8;color:#a02020}
+.mood-bar{height:4px;background:var(--border2);border-radius:2px;margin-top:4px;overflow:hidden}
+.mood-fill{height:100%;border-radius:2px;transition:width .5s}
+
+/* CENTER */
+#center{position:relative;overflow:hidden;background:var(--bg)}
+canvas#scene{display:block;width:100%;height:100%;image-rendering:pixelated;cursor:pointer}
+
+/* Zone overlay */
+#zone-overlay{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#zone-overlay.open{opacity:1;pointer-events:all}
+#zone-header{
+  padding:12px 16px;display:flex;align-items:center;gap:10px;
+  background:rgba(0,0,0,0.18);
+}
+#zone-back{background:rgba(255,255,255,.25);border:none;border-radius:18px;padding:5px 14px;color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:background .2s}
+#zone-back:hover{background:rgba(255,255,255,.4)}
+#zone-title{font-size:20px;font-weight:900;color:white;text-shadow:0 2px 4px rgba(0,0,0,.25)}
+#zone-body{flex:1;overflow-y:auto;padding:14px 16px;background:var(--panel);display:flex;flex-direction:column;gap:9px}
+
+/* RIGHT */
+#right{background:var(--panel);border-left:2px solid var(--border);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+#msg{background:var(--bg);border:2px solid var(--border);border-radius:var(--r2);padding:10px 12px;font-size:12px;font-weight:600;color:var(--text2);min-height:44px;transition:border-color .3s}
+#msg.ok{border-color:var(--farm);color:var(--farm-d)}
+#msg.err{border-color:var(--cook);color:var(--cook-d)}
+
+/* BREED SLOTS */
+.breed-row{display:flex;gap:7px;align-items:center}
+.bslot{flex:1;background:var(--bg);border:2px dashed var(--border);border-radius:var(--r3);padding:8px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);cursor:pointer;transition:all .2s;min-height:54px;display:flex;align-items:center;justify-content:center}
+.bslot.on{border-style:solid;border-color:var(--farm);color:var(--text);background:var(--farm-l)}
+.bslot:hover{border-color:var(--text3)}
+.bx{font-size:16px;font-weight:900;color:var(--text3)}
+
+/* BUTTONS */
+.btn{border:none;border-radius:var(--r3);padding:9px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;width:100%;text-align:center}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow2)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-g{background:var(--farm);color:white}.btn-g:hover:not(:disabled){background:var(--farm-d)}
+.btn-y{background:var(--gold);color:#6a4000}.btn-y:hover:not(:disabled){background:#d0a010}
+.btn-r{background:var(--cook);color:white}.btn-r:hover:not(:disabled){background:var(--cook-d)}
+.btn-p{background:var(--crystal);color:white}.btn-p:hover:not(:disabled){background:var(--crystal-d)}
+.btn-n{background:var(--bg);color:var(--text);border:1.5px solid var(--border)}.btn-n:hover:not(:disabled){background:var(--border2)}
+
+/* CRYSTAL GRID */
+.cg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.cc{background:var(--crystal-l);border:1.5px solid #c8a0ff;border-radius:var(--r3);padding:8px;text-align:center}
+.cc-icon{font-size:20px}.cc-n{font-size:18px;font-weight:900;color:var(--crystal)}
+.cc-name{font-size:9px;font-weight:800;color:var(--crystal-d)}
+
+/* BREED QUEUE */
+.bq-item{background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r3);padding:8px 10px}
+.bq-type{font-size:10px;font-weight:800;color:var(--crystal)}
+.bq-names{font-size:11px;margin:3px 0}
+.bq-rem{font-size:10px;color:var(--text3)}
+.pb{height:5px;background:var(--border2);border-radius:3px;margin-top:4px;overflow:hidden}
+.pbf{height:100%;border-radius:3px;transition:width .5s}
+
+/* SECTION HEADER */
+.sh{font-size:10px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:5px;padding:2px 0}
+.sh::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* FARM CANVAS ZONE */
+.farm-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fslot{background:#c8a870;border:3px solid #a07840;border-radius:var(--r2);height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.fslot::before{content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .2s}
+.fslot:hover::before{background:rgba(255,255,255,.15)}
+.fslot.empty{background:#c8a870}
+.fslot.growing{background:#b09060}
+.fslot.ready{background:#a08050;border-color:#c8c020;animation:glow-gold 1.2s ease-in-out infinite alternate}
+@keyframes glow-gold{from{box-shadow:0 0 4px #f0c020}to{box-shadow:0 0 16px #f0c020,0 0 32px rgba(240,192,32,.4)}}
+.fslot-emoji{font-size:36px;image-rendering:pixelated;transition:transform .3s}
+.fslot:hover .fslot-emoji{transform:scale(1.1)}
+.fslot-label{font-size:11px;font-weight:800;color:white;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:3px}
+.fslot-sub{font-size:10px;color:rgba(255,255,255,.8);font-weight:700}
+.fpb{width:80%;height:4px;background:rgba(255,255,255,.3);border-radius:2px;margin-top:4px;overflow:hidden}
+.fpbf{height:100%;background:var(--gold);border-radius:2px;transition:width 1s}
+
+/* ANIMAL SCENE */
+.ranch-scene{background:linear-gradient(180deg,#a8d8a8 0%,#78b878 60%,#98c878 100%);border-radius:var(--r2);height:160px;position:relative;overflow:hidden;margin-bottom:8px}
+.ranch-ground{position:absolute;bottom:0;left:0;right:0;height:30px;background:#68a848;border-top:3px solid #48883a}
+.ranch-animal{position:absolute;bottom:30px;font-size:28px;cursor:pointer;transition:left .8s linear;user-select:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
+.ranch-animal.bounce{animation:abounce .4s ease-in-out}
+@keyframes abounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.ranch-animal.idle{animation:idle 2s ease-in-out infinite}
+@keyframes idle{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.05)}}
+.ranch-animal.breeding{animation:heart-pulse 1s ease-in-out infinite}
+@keyframes heart-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* COOK SCENE */
+.cook-scene{background:linear-gradient(180deg,#c88840 0%,#a06020 100%);border-radius:var(--r2);height:140px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.pot{font-size:64px;position:relative;z-index:2}
+.bubble{position:absolute;font-size:14px;animation:bubble-up 1.5s ease-out infinite;opacity:0}
+@keyframes bubble-up{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-60px);opacity:0}}
+.coin-fly{position:absolute;font-size:20px;animation:coin-fly .8s ease-out forwards;pointer-events:none}
+@keyframes coin-fly{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-80px) scale(1.5);opacity:0}}
+.cook-fire{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:28px;animation:fire-flicker .5s ease-in-out infinite alternate}
+@keyframes fire-flicker{from{transform:translateX(-50%) scale(1)}to{transform:translateX(-50%) scale(1.1) scaleX(0.95)}}
+
+/* CRYSTAL SCENE */
+.crystal-scene{background:linear-gradient(180deg,#1a1228 0%,#2a1848 60%,#180c30 100%);border-radius:var(--r2);height:140px;position:relative;overflow:hidden;margin-bottom:8px}
+.cs-crystal{position:absolute;bottom:0;font-size:28px;cursor:pointer;transition:all .2s;animation:crystal-glow 2s ease-in-out infinite alternate}
+@keyframes crystal-glow{from{filter:drop-shadow(0 0 4px rgba(160,120,255,.4))}to{filter:drop-shadow(0 0 12px rgba(160,120,255,.9))}}
+.cs-crystal.ready{animation:crystal-ready 1s ease-in-out infinite alternate;cursor:pointer}
+@keyframes crystal-ready{from{transform:translateY(0) scale(1);filter:drop-shadow(0 0 8px rgba(255,220,80,.6))}to{transform:translateY(-4px) scale(1.1);filter:drop-shadow(0 0 20px rgba(255,220,80,1))}}
+.cs-crystal:hover{transform:scale(1.2)!important}
+.cs-star{position:absolute;font-size:10px;animation:twinkle 2s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.3}50%{opacity:1}}
+.dig-anim{animation:dig .3s ease-in-out}
+@keyframes dig{0%,100%{transform:scale(1)}50%{transform:scale(0.7) rotate(-10deg)}}
+
+/* POPUP */
+#popup{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s}
+#popup.open{opacity:1;pointer-events:all}
+#popup-box{background:var(--panel);border:2px solid var(--border);border-radius:var(--r);padding:20px;min-width:280px;max-width:90vw;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow);transform:scale(.9);transition:transform .2s}
+#popup.open #popup-box{transform:scale(1)}
+#popup-title{font-size:16px;font-weight:900;margin-bottom:12px;color:var(--text)}
+#popup-content{display:flex;flex-direction:column;gap:8px}
+#popup-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)}
+
+/* ITEM LIST */
+.ilist{display:flex;flex-direction:column;gap:5px}
+.irow{background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r3);padding:7px 9px;display:flex;align-items:center;gap:7px;cursor:pointer;transition:all .15s;font-size:12px}
+.irow:hover{border-color:var(--border);background:var(--panel)}
+.irow.sel{border-color:var(--farm);background:var(--farm-l)}
+.irow-name{font-weight:800;color:var(--text);flex:1}
+.irow-info{color:var(--text3);font-size:10px}
+
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:white;padding:9px 20px;border-radius:20px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1>🌿 牧野<em>物語</em></h1>
+  <div class="stat"><span class="stat-icon">🪙</span><span id="s-gold">500</span></div>
+  <div class="stat"><span class="stat-icon">🐑</span><span id="s-anim">0</span>/<span id="s-cap">6</span></div>
+  <div class="stat"><span class="stat-icon">🍎</span><span id="s-fruit">0</span></div>
+  <div class="stat"><span class="stat-icon">🥩</span><span id="s-meat">0</span></div>
+  <button id="save-btn" onclick="saveGame()">💾 存檔</button>
+  <span id="save-ok">已儲存 ✓</span>
+  <button id="admin-btn" onclick="openAdmin()">⚙️ 後台</button>
+</div>
+
+<div id="app">
+  <!-- LEFT -->
+  <div id="left">
+    <div class="panel-hd">🐑 牧場動物</div>
+    <div id="al"></div>
+    <div class="panel-hd">🍎 水果庫存</div>
+    <div id="fl"></div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <canvas id="scene"></canvas>
+    <div id="zone-overlay">
+      <div id="zone-header">
+        <button id="zone-back" onclick="closeZone()">← 返回</button>
+        <div id="zone-title">農場區</div>
+      </div>
+      <div id="zone-body"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right">
+    <div class="sh">操作訊息</div>
+    <div id="msg">歡迎來到牧野物語！點擊地圖區域開始。</div>
+
+    <div class="sh">繁殖配對</div>
+    <div class="breed-row">
+      <div class="bslot" id="bs-a" onclick="clearSlot('a')">點擊選擇</div>
+      <div class="bx">✕</div>
+      <div class="bslot" id="bs-b" onclick="clearSlot('b')">點擊選擇</div>
+    </div>
+    <button class="btn btn-g" onclick="startBreed()">開始繁殖</button>
+    <button class="btn btn-y" id="speed-btn" onclick="speedBreed()">⚡ 加速繁殖（$<span id="speed-cost">100</span>）</button>
+    <button class="btn btn-n" onclick="clearBreed()">清除選擇</button>
+
+    <div class="sh">晶石庫存</div>
+    <div class="cg">
+      <div class="cc"><div class="cc-icon">🔥</div><div class="cc-n" id="c-fire">0</div><div class="cc-name">火晶</div></div>
+      <div class="cc"><div class="cc-icon">💧</div><div class="cc-n" id="c-dew">0</div><div class="cc-name">露晶</div></div>
+      <div class="cc" style="background:#ffe8e8;border-color:#ffb0b0"><div class="cc-icon">🌑</div><div class="cc-n" id="c-dark" style="color:#cc2222">0</div><div class="cc-name">暗晶</div></div>
+    </div>
+
+    <div class="sh">繁殖中</div>
+    <div id="bq"><div style="font-size:11px;color:var(--text3);text-align:center">無</div></div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="popup" onclick="if(event.target===this)closePopup()">
+  <div id="popup-box">
+    <button id="popup-close" onclick="closePopup()">✕</button>
+    <div id="popup-title"></div>
+    <div id="popup-content"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG (can be overridden by config.json)
+// ══════════════════════════════════════════
+let CFG = {
+  version: 1,
+  animals: [
+    {id:'sheep',name:'羊',emoji:'🐑',sellPrice:50,moodDecay:0.5,
+     genes:{
+       ear:[{v:'round',w:40,rare:false},{v:'pointy',w:30,rare:false},{v:'floppy',w:20,rare:false},{v:'none',w:10,rare:true}],
+       color:[{v:'white',w:35,rare:false},{v:'brown',w:30,rare:false},{v:'grey',w:20,rare:false},{v:'orange',w:10,rare:false},{v:'black',w:5,rare:true}],
+       pattern:[{v:'none',w:40,rare:false},{v:'spot',w:30,rare:false},{v:'patch',w:20,rare:false},{v:'stripe',w:10,rare:true}],
+       tail:[{v:'short',w:40,rare:false},{v:'fluffy',w:25,rare:false},{v:'long',w:20,rare:false},{v:'curl',w:15,rare:true}],
+       horn:[{v:'none',w:50,rare:false},{v:'small',w:25,rare:false},{v:'large',w:15,rare:true},{v:'spiral',w:10,rare:true}],
+       eye:[{v:'black',w:50,rare:false},{v:'brown',w:25,rare:false},{v:'blue',w:15,rare:false},{v:'gold',w:7,rare:true},{v:'red',w:3,rare:true}],
+     }
+    },
+  ],
+  fruits: [
+    {id:'apple',name:'蘋果',emoji:'🍎',sellPrice:10,baseYield:3,growTime:60},
+    {id:'berry',name:'莓果',emoji:'🫐',sellPrice:6,baseYield:5,growTime:45},
+    {id:'melon',name:'哈密瓜',emoji:'🍈',sellPrice:25,baseYield:1,growTime:120},
+    {id:'grape',name:'葡萄',emoji:'🍇',sellPrice:12,baseYield:4,growTime:90},
+    {id:'starfruit',name:'星果',emoji:'⭐',sellPrice:40,baseYield:2,growTime:180},
+  ],
+  crystals: [
+    {id:'fire',name:'火晶',emoji:'🔥',w:50,cookBonus:0.2},
+    {id:'dew',name:'露晶',emoji:'💧',w:35,breedSpeedMult:0.6},
+    {id:'dark',name:'暗晶',emoji:'🌑',w:15,mutationMult:5},
+  ],
+  rarity: {
+    thresholds:[0,1,2,3,4],
+    names:['普通','稀有','史詩','傳說','究極'],
+    sellMult:[1,3,8,20,60],
+  },
+  balance: {
+    breedBase:30,
+    naturalBreedInterval:60,
+    naturalBreedMoodMin:80,
+    moodDecayBase:0.5,
+    speedBreedCost:100,
+    speedBreedComplete:true,
+    upgrades:{farm_slot:200,ranch_cap:300,cook_slot:400,crystal_node:500,buy_sheep:100},
+    seedPrices:{apple:50,berry:50,melon:150,grape:120,starfruit:300},
+  },
+  ui: {
+    farmName:'農場區', ranchName:'牧場區', cookName:'烹飪區', crystalName:'晶石洞',
+    farmSub:'種植・收成', ranchSub:'養殖・繁殖', cookSub:'料理・販售', crystalSub:'挖掘・加成',
+  },
+  cloudUrl: 'https://speedkerry-ctrl.github.io/pasture-config/pasture_config.json',
+};
+
+// Display name lookup
+const DN={
+  round:'圓耳',pointy:'尖耳',floppy:'垂耳',none:'無',
+  white:'白',brown:'棕',grey:'灰',orange:'橘',black:'黑',
+  spot:'斑點',patch:'花斑',stripe:'條紋',glow:'發光',
+  short:'短尾',fluffy:'蓬尾',long:'長尾',curl:'捲尾',
+  small:'小角',large:'大角',spiral:'螺旋角',
+  blue:'藍',gold:'金',red:'紅',yellow:'黃',green:'綠',purple:'紫',
+};
+function dn(v){return DN[v]||v;}
+function fruitCfg(id){return CFG.fruits.find(f=>f.id===id)||CFG.fruits[0];}
+function animalCfg(id){return CFG.animals.find(a=>a.id===id)||CFG.animals[0];}
+
+// ══════════════════════════════════════════
+// GENE HELPERS
+// ══════════════════════════════════════════
+function wRand(pool){
+  const tot=pool.reduce((s,i)=>s+(i.w||1),0);
+  let r=Math.random()*tot,c=0;
+  for(const i of pool){c+=(i.w||1);if(r<=c)return i.v;}
+  return pool[pool.length-1].v;
+}
+function uid(){return Date.now()+'_'+Math.floor(Math.random()*1e9);}
+
+function calcRarity(genes, animalId){
+  const ac=animalCfg(animalId);
+  let score=0;
+  for(const [slot, val] of Object.entries(genes)){
+    const pool=ac.genes[slot];
+    if(!pool)continue;
+    const entry=pool.find(e=>e.v===val);
+    if(entry&&entry.rare)score++;
+  }
+  const th=CFG.rarity.thresholds;
+  for(let i=th.length-1;i>=0;i--){if(score>=th[i])return i;}
+  return 0;
+}
+
+// ══════════════════════════════════════════
+// ANIMAL DATA
+// ══════════════════════════════════════════
+function createWildAnimal(speciesId){
+  const ac=animalCfg(speciesId);
+  const genes={};
+  for(const [slot,pool] of Object.entries(ac.genes)) genes[slot]=wRand(pool);
+  const rarity=calcRarity(genes,speciesId);
+  return {id:uid(),name:'無名',species:speciesId,birthday:Date.now(),generation:1,isWild:true,
+    genes,rarity,mood:100,isBreeding:false,breedFinish:0,parentA:'',parentB:''};
+}
+function createOffspring(pa,pb,boosted=false){
+  const ac=animalCfg(pa.species);
+  const genes={};
+  const mutRate=boosted?(CFG.balance.speedBreedCost?0.25:0.25):0.05;
+  for(const [slot,pool] of Object.entries(ac.genes)){
+    genes[slot]=Math.random()<0.5?(pa.genes[slot]||wRand(pool)):(pb.genes[slot]||wRand(pool));
+    if(Math.random()<mutRate) genes[slot]=wRand(pool);
+  }
+  return {id:uid(),name:'無名',species:pa.species,birthday:Date.now(),
+    generation:Math.max(pa.generation,pb.generation)+1,isWild:false,
+    genes,rarity:calcRarity(genes,pa.species),mood:100,
+    isBreeding:false,breedFinish:0,parentA:pa.id,parentB:pb.id};
+}
+function animalSellPrice(a){
+  const base=animalCfg(a.species).sellPrice||50;
+  return Math.floor(base*CFG.rarity.sellMult[a.rarity]);
+}
+function animalEmoji(a){
+  const colorEmoji={white:'🐑',brown:'🐻',grey:'🐺',orange:'🦊',black:'🐈‍⬛'};
+  return colorEmoji[a.genes?.color]||animalCfg(a.species).emoji||'🐑';
+}
+
+// ══════════════════════════════════════════
+// FRUIT DATA
+// ══════════════════════════════════════════
+function createWildFruit(typeId){
+  const fc=fruitCfg(typeId);
+  return {id:uid(),name:fc.name,fruitType:typeId,
+    color:wRand([{v:'red',w:30},{v:'yellow',w:25},{v:'green',w:20},{v:'purple',w:15},{v:'blue',w:7},{v:'gold',w:3}]),
+    pattern:wRand([{v:'none',w:50},{v:'stripe',w:25},{v:'spot',w:15},{v:'glow',w:10}]),
+    size:'normal',rarity:0,
+    yieldBonus:0.8+Math.random()*0.4,quality:1+Math.floor(Math.random()*2),
+    growTime:fc.growTime||60,isPlanted:false,plantTime:0,
+    isBreeding:false,breedFinish:0,parentA:'',parentB:'',parentAType:'',
+    generation:1,birthday:Date.now()};
+}
+function fruitSellPrice(f){
+  const base=fruitCfg(f.fruitType).sellPrice||10;
+  return Math.floor(base*(CFG.rarity.sellMult[f.rarity]||1)*f.yieldBonus);
+}
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+let G={
+  gold:500,animals:[],fruits:[],breedingSlots:[],
+  farmSlots:[null,null,null,null],
+  crystals:{fire:0,dew:0,dark:0},crystalNodes:[],
+  meatCount:0,darkActive:false,
+  ranchCap:6,farmSlotCount:4,
+  codexAnimal:[],
+};
+
+// ══════════════════════════════════════════
+// CRYSTAL NODES
+// ══════════════════════════════════════════
+function spawnCrystalNode(){
+  if(G.crystalNodes.length>=8)return;
+  const type=wRand(CFG.crystals.map(c=>({v:c.id,w:c.w})));
+  G.crystalNodes.push({id:uid(),type,readyAt:Date.now()+180000+Math.random()*420000});
+}
+function initCrystalNodes(){
+  G.crystalNodes=G.crystalNodes||[];
+  while(G.crystalNodes.length<6)spawnCrystalNode();
+}
+
+// ══════════════════════════════════════════
+// GAME TICK
+// ══════════════════════════════════════════
+let lastTick=Date.now(), naturalTimer=0;
+function gameTick(){
+  const now=Date.now(), dt=(now-lastTick)/1000; lastTick=now;
+  for(const a of G.animals) if(!a.isBreeding) a.mood=Math.max(0,a.mood-dt*(animalCfg(a.species).moodDecay||CFG.balance.moodDecayBase));
+  const done=G.breedingSlots.filter(s=>now>=s.finishAt);
+  for(const s of done){G.breedingSlots=G.breedingSlots.filter(x=>x!==s);completeBreed(s);}
+  naturalTimer+=dt;
+  if(naturalTimer>=CFG.balance.naturalBreedInterval){naturalTimer=0;tryNaturalBreed();}
+  updateUI();
+  if(currentZone)renderZone(currentZone);
+}
+setInterval(gameTick,2000);
+
+function tryNaturalBreed(){
+  const el=G.animals.filter(a=>!a.isBreeding&&a.mood>=CFG.balance.naturalBreedMoodMin);
+  if(el.length<2||G.animals.length>=G.ranchCap)return;
+  el.sort(()=>Math.random()-.5);
+  const pa=el[0],pb=el[1];
+  if(pa.species!==pb.species)return;
+  const child=createOffspring(pa,pb);
+  child.name='自然後代';
+  G.animals.push(child);
+  showMsg(`🐣 自然繁殖！${RARITY[child.rarity]}後代誕生！`,'ok');
+  toast(`🐣 自然繁殖！${RARITY[child.rarity]}`);
+  autoSave();
+}
+
+function completeBreed(slot){
+  if(slot.type==='axа'){
+    const pa=G.animals.find(a=>a.id===slot.pA),pb=G.animals.find(a=>a.id===slot.pB);
+    if(!pa||!pb)return;
+    pa.isBreeding=false;pb.isBreeding=false;
+    if(G.animals.length>=G.ranchCap){showMsg('牧場已滿！','err');return;}
+    const child=createOffspring(pa,pb,G.darkActive);
+    if(G.darkActive)G.darkActive=false;
+    child.name='新生'+animalCfg(pa.species).name;
+    G.animals.push(child);
+    showMsg(`✨ 繁殖！${child.name}（${RARITY[child.rarity]}）誕生！`,'ok');
+    toast(`✨ ${RARITY[child.rarity]}誕生！`);
+  } else if(slot.type==='fxf'){
+    const pa=G.fruits.find(f=>f.id===slot.pA),pb=G.fruits.find(f=>f.id===slot.pB);
+    if(!pa||!pb)return;
+    pa.isBreeding=false;pb.isBreeding=false;
+    const fc=fruitCfg(Math.random()<.5?pa.fruitType:pb.fruitType);
+    const child=createWildFruit(fc.id);
+    child.color=Math.random()<.5?pa.color:pb.color;
+    child.name=child.name+'（培育）';
+    G.fruits.push(child);
+    showMsg(`🍀 水果培育完成！${child.name}誕生！`,'ok');
+    toast(`🍀 新品種！${child.name}`);
+  } else if(slot.type==='axf'){
+    const animal=G.animals.find(a=>a.id===slot.pA),fruit=G.fruits.find(f=>f.id===slot.pB);
+    if(!animal||!fruit)return;
+    animal.isBreeding=false;fruit.isBreeding=false;
+    const child=createWildFruit(fruit.fruitType);
+    child.color=animal.genes?.color||child.color;
+    child.yieldBonus=fruit.yieldBonus*1.5;
+    child.quality=Math.min(5,fruit.quality+1);
+    child.rarity=Math.max(1,child.rarity);
+    child.name=fruitCfg(fruit.fruitType).name+'（獸化）';
+    G.fruits.push(child);
+    showMsg(`🌟 跨種研發！${child.name}誕生！`,'ok');
+    toast(`🌟 獸化水果！${child.name}`);
+  }
+  autoSave();
+}
+
+const RARITY=['普通','稀有','史詩','傳說','究極'];
+const RARITY_C=['r0','r1','r2','r3','r4'];
+
+// ══════════════════════════════════════════
+// CANVAS MAP
+// ══════════════════════════════════════════
+const canvas=document.getElementById('scene');
+const ctx=canvas.getContext('2d');
+let W,H;
+
+function resizeCanvas(){
+  const center=document.getElementById('center');
+  W=canvas.width=center.clientWidth;
+  H=canvas.height=center.clientHeight;
+  drawMap();
+}
+
+const ZONES=[
+  {id:'farm',x:0.25,y:0.35,w:0.36,h:0.28,label:'農場區',sub:'種植・收成',icon:'🌾',bg:['#6db86b','#4a9a48']},
+  {id:'ranch',x:0.65,y:0.35,w:0.36,h:0.28,label:'牧場區',sub:'養殖・繁殖',icon:'🐑',bg:['#e8a040','#c07820']},
+  {id:'cook',x:0.25,y:0.72,w:0.36,h:0.28,label:'烹飪區',sub:'料理・販售',icon:'🍳',bg:['#e05858','#b03030']},
+  {id:'crystal',x:0.65,y:0.72,w:0.36,h:0.28,label:'晶石洞',sub:'挖掘・加成',icon:'💎',bg:['#9060d0','#6030a0']},
+];
+let hoverZone=null, mapAnimFrame=0;
+
+function drawMap(){
+  if(!W||!H)return;
+  ctx.clearRect(0,0,W,H);
+  // bg
+  const gr=ctx.createRadialGradient(W*.3,H*.3,0,W*.5,H*.5,W*.7);
+  gr.addColorStop(0,'#fff8e8');gr.addColorStop(1,'#fef0d0');
+  ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+
+  // decorative dots
+  ctx.fillStyle='rgba(200,170,100,0.15)';
+  for(let i=0;i<20;i++){
+    const x=(i*137.5)%W, y=(i*89.3)%H;
+    ctx.beginPath();ctx.arc(x,y,3+i%4,0,Math.PI*2);ctx.fill();
+  }
+
+  mapAnimFrame++;
+  for(const z of ZONES){
+    const zx=z.x*W-z.w*W/2, zy=z.y*H-z.h*H/2, zw=z.w*W, zh=z.h*H;
+    const isHover=hoverZone===z.id;
+    const scale=isHover?1.03:1;
+    const cx=zx+zw/2, cy=zy+zh/2;
+    ctx.save();
+    ctx.translate(cx,cy);ctx.scale(scale,scale);ctx.translate(-cx,-cy);
+
+    // shadow
+    ctx.shadowColor='rgba(0,0,0,0.2)';ctx.shadowBlur=isHover?20:10;ctx.shadowOffsetY=isHover?6:3;
+
+    // bg gradient
+    const g=ctx.createLinearGradient(zx,zy,zx+zw,zy+zh);
+    g.addColorStop(0,z.bg[0]);g.addColorStop(1,z.bg[1]);
+    ctx.fillStyle=g;
+    roundRect(ctx,zx,zy,zw,zh,16);ctx.fill();
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+
+    // border
+    ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=2;
+    roundRect(ctx,zx+1,zy+1,zw-2,zh-2,15);ctx.stroke();
+
+    // floating icon
+    const bob=Math.sin(mapAnimFrame*0.06+(ZONES.indexOf(z)*1.2))*4;
+    ctx.font=`${Math.floor(zh*0.38)}px serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(z.icon,cx,cy-zh*0.08+bob);
+
+    // label
+    ctx.fillStyle='rgba(255,255,255,0.95)';
+    ctx.font=`900 ${Math.floor(zh*0.16)}px Nunito,sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowColor='rgba(0,0,0,0.3)';ctx.shadowBlur=4;ctx.shadowOffsetY=1;
+    ctx.fillText(z.label,cx,cy+zh*0.22);
+    ctx.shadowColor='transparent';ctx.shadowBlur=0;
+
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.font=`700 ${Math.floor(zh*0.11)}px Nunito,sans-serif`;
+    ctx.fillText(z.sub,cx,cy+zh*0.36);
+
+    // badge
+    const badge=getZoneBadge(z.id);
+    if(badge){
+      ctx.fillStyle='rgba(255,255,255,0.25)';
+      roundRect(ctx,zx+zw-60,zy+8,52,20,10);ctx.fill();
+      ctx.fillStyle='white';
+      ctx.font=`800 11px Nunito,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(badge,zx+zw-34,zy+18);
+    }
+    ctx.restore();
+  }
+  if(!currentZone) requestAnimationFrame(drawMap);
+}
+
+function getZoneBadge(id){
+  if(id==='farm') return G.farmSlots.length+'槽';
+  if(id==='ranch') return `${G.animals.length}/${G.ranchCap}`;
+  if(id==='crystal'){const r=G.crystalNodes.filter(n=>Date.now()>=n.readyAt).length;return r?r+'可挖':'⏳';}
+  if(id==='cook') return G.meatCount>0?`🥩${G.meatCount}`:'';
+  return '';
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+canvas.addEventListener('mousemove',e=>{
+  if(currentZone)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  let hit=null;
+  for(const z of ZONES){
+    const zx=z.x*W-z.w*W/2,zy=z.y*H-z.h*H/2,zw=z.w*W,zh=z.h*H;
+    if(mx>=zx&&mx<=zx+zw&&my>=zy&&my<=zy+zh){hit=z.id;break;}
+  }
+  if(hit!==hoverZone){hoverZone=hit;canvas.style.cursor=hit?'pointer':'default';}
+});
+canvas.addEventListener('click',e=>{
+  if(currentZone)return;
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  for(const z of ZONES){
+    const zx=z.x*W-z.w*W/2,zy=z.y*H-z.h*H/2,zw=z.w*W,zh=z.h*H;
+    if(mx>=zx&&mx<=zx+zw&&my>=zy&&my<=zy+zh){openZone(z.id);break;}
+  }
+});
+
+// ══════════════════════════════════════════
+// ZONE SYSTEM
+// ══════════════════════════════════════════
+let currentZone=null;
+const ZONE_GRAD={
+  farm:'linear-gradient(135deg,#6db86b,#3a8a38)',
+  ranch:'linear-gradient(135deg,#e8a040,#a86010)',
+  cook:'linear-gradient(135deg,#e05858,#a02828)',
+  crystal:'linear-gradient(135deg,#9060d0,#5030a0)',
+};
+
+function openZone(id){
+  currentZone=id;
+  const ol=document.getElementById('zone-overlay');
+  ol.classList.add('open');
+  ol.style.background=ZONE_GRAD[id];
+  const z=ZONES.find(z=>z.id===id);
+  document.getElementById('zone-title').textContent=(z?.label)||id;
+  document.getElementById('zone-header').style.background='rgba(0,0,0,0.18)';
+  renderZone(id);
+}
+function closeZone(){
+  currentZone=null;
+  document.getElementById('zone-overlay').classList.remove('open');
+  drawMap();
+}
+function renderZone(id){
+  const el=document.getElementById('zone-body');
+  if(id==='farm')buildFarm(el);
+  else if(id==='ranch')buildRanch(el);
+  else if(id==='cook')buildCook(el);
+  else if(id==='crystal')buildCrystal(el);
+}
+
+// ══════════════════════════════════════════
+// FARM ZONE
+// ══════════════════════════════════════════
+let pendingSlot=-1;
+function buildFarm(el){
+  el.innerHTML='';
+  sh(el,'種植槽');
+  const grid=mk('div','farm-grid');
+  const now=Date.now();
+  G.farmSlots.forEach((s,i)=>{
+    const slot=mk('div','fslot');
+    if(!s){
+      slot.classList.add('empty');
+      slot.innerHTML=`<div class="fslot-emoji">🌱</div><div class="fslot-label">空槽 ${i+1}</div><div class="fslot-sub">點擊種植</div>`;
+      slot.onclick=()=>{pendingSlot=i;showMsg(`已選槽${i+1}，請從下方選擇水果種植`);};
+    } else {
+      const ready=now>=s.plantTime+s.growTime*1000;
+      const prog=Math.min(100,((now-s.plantTime)/(s.growTime*1000))*100);
+      const fc=fruitCfg(s.fruitType);
+      let stageEmoji=ready?fc.emoji:(prog>50?'🌿':'🌱');
+      if(ready)slot.classList.add('ready');
+      else slot.classList.add('growing');
+      const rem=ready?0:Math.ceil((s.plantTime+s.growTime*1000-now)/1000);
+      slot.innerHTML=`
+        <div class="fslot-emoji" style="animation:${ready?'bounce 1s infinite':'idle 2s infinite'}">${stageEmoji}</div>
+        <div class="fslot-label">${fc.emoji} ${fc.name}</div>
+        <div class="fslot-sub">${ready?'✅點擊收成':rem+'秒'}</div>
+        ${!ready?`<div class="fpb"><div class="fpbf" style="width:${prog.toFixed(0)}%"></div></div>`:''}
+      `;
+      if(ready){
+        slot.title='點擊收成';
+        slot.onclick=()=>harvestSlot(i);
+      }
+    }
+    grid.appendChild(slot);
+  });
+  el.appendChild(grid);
+
+  btn(el,'擴張種植槽 +2（$'+CFG.balance.upgrades.farm_slot+'）','btn-g',
+    ()=>buyUpgrade('farm_slot'),G.gold<CFG.balance.upgrades.farm_slot);
+
+  sh(el,'購買種子');
+  for(const fc of CFG.fruits){
+    const cost=CFG.balance.seedPrices[fc.id]||50;
+    btn(el,`${fc.emoji} ${fc.name}種子（$${cost}）`,'btn-n',
+      ()=>buySeed(fc.id,cost),G.gold<cost);
+  }
+
+  const avail=G.fruits.filter(f=>!f.isPlanted&&!f.isBreeding);
+  if(avail.length>0){
+    sh(el,'庫存水果（點擊種入選定槽）');
+    const list=mk('div','ilist');
+    for(const f of avail){
+      const row=mk('div','irow');
+      const fc=fruitCfg(f.fruitType);
+      row.innerHTML=`<span style="font-size:18px">${fc.emoji}</span><span class="irow-name">${f.name}</span><span class="irow-info">×${f.yieldBonus.toFixed(1)}產量</span>`;
+      const fid_=f.id; row.onclick=()=>plantFruit(pendingSlot,fid_);
+      list.appendChild(row);
+    }
+    el.appendChild(list);
+  }
+}
+
+function harvestSlot(i){
+  const f=G.farmSlots[i];
+  if(!f)return;
+  if(Date.now()<f.plantTime+f.growTime*1000){showMsg('還沒成熟','err');return;}
+  G.farmSlots[i]=null;f.isPlanted=false;
+  const fc=fruitCfg(f.fruitType);
+  const yCount=Math.max(1,Math.floor(f.yieldBonus*fc.baseYield));
+  G.fruits.push(f);
+  for(let j=1;j<yCount;j++){const c=createWildFruit(f.fruitType);c.name=fc.name;G.fruits.push(c);}
+  showMsg(`🎉 收成！獲得 ${yCount} 個 ${fc.name}`,'ok');
+  toast(`🎉 +${yCount} ${fc.emoji}`);
+  renderZone('farm');autoSave();
+}
+
+function plantFruit(slotIdx,fruitId){
+  if(slotIdx<0){showMsg('請先點擊空槽再選水果','err');return;}
+  if(G.farmSlots[slotIdx]!==null){showMsg('這個槽已有植物','err');return;}
+  const f=G.fruits.find(x=>x.id===fruitId);
+  if(!f||f.isPlanted||f.isBreeding){showMsg('無法種植此水果','err');return;}
+  f.isPlanted=true;f.plantTime=Date.now();
+  G.farmSlots[slotIdx]=f;
+  G.fruits=G.fruits.filter(x=>x.id!==fruitId);
+  pendingSlot=-1;
+  const fc=fruitCfg(f.fruitType);
+  showMsg(`🌱 種植成功！${fc.name}約${f.growTime}秒後收成`,'ok');
+  toast(`🌱 種下${fc.emoji}`);
+  renderZone('farm');autoSave();
+}
+
+function buySeed(typeId,cost){
+  if(G.gold<cost){showMsg('金幣不足','err');return;}
+  G.gold-=cost;
+  const f=createWildFruit(typeId);
+  const fc=fruitCfg(typeId);
+  f.name=fc.name+'種子';
+  G.fruits.push(f);
+  showMsg(`🌱 購買${fc.name}種子！`,'ok');
+  toast(`${fc.emoji} 購入！`);
+  renderZone('farm');autoSave();
+}
+
+// ══════════════════════════════════════════
+// RANCH ZONE
+// ══════════════════════════════════════════
+let animalPos={};
+function buildRanch(el){
+  el.innerHTML='';
+  // Pixel scene
+  const scene=mk('div','ranch-scene');
+  const ground=mk('div','ranch-ground');scene.appendChild(ground);
+
+  // Animate animals
+  G.animals.forEach((a,i)=>{
+    if(!animalPos[a.id])animalPos[a.id]={x:10+i*20,dir:1};
+    const pos=animalPos[a.id];
+    pos.x+=pos.dir*0.5;
+    if(pos.x>80)pos.dir=-1;
+    if(pos.x<5)pos.dir=1;
+
+    const em=mk('div','ranch-animal');
+    em.textContent=animalEmoji(a);
+    em.style.left=pos.x+'%';
+    em.style.transform=pos.dir<0?'scaleX(-1)':'scaleX(1)';
+    if(a.isBreeding){em.classList.add('breeding');em.style.left=(30+i*15)+'%';}
+    else if(a.mood<50)em.style.filter='grayscale(0.5)';
+    em.onclick=()=>showAnimalMenu(a);
+    scene.appendChild(em);
+
+    if(a.isBreeding){
+      const heart=mk('div','');
+      heart.textContent='💕';
+      heart.style.cssText=`position:absolute;bottom:35px;left:${pos.x+2}%;font-size:14px;animation:coin-fly 1.5s ease-out infinite;opacity:0.8`;
+      scene.appendChild(heart);
+    }
+    if(a.mood>=80&&!a.isBreeding){
+      const star=mk('div','');
+      star.textContent='✨';
+      star.style.cssText=`position:absolute;bottom:40px;left:${pos.x+3}%;font-size:12px;animation:twinkle 1.5s infinite`;
+      scene.appendChild(star);
+    }
+  });
+  el.appendChild(scene);
+
+  sh(el,`動物（${G.animals.length}/${G.ranchCap}）`);
+  const list=mk('div','ilist');
+  for(const a of G.animals){
+    const row=mk('div','irow');
+    row.style.flexDirection='column';row.style.alignItems='flex-start';row.style.gap='5px';
+    const moodColor=a.mood>=80?'var(--farm)':a.mood>=50?'var(--ranch)':'var(--cook)';
+    row.innerHTML=`
+      <div style="display:flex;align-items:center;gap:7px;width:100%">
+        <span style="font-size:22px">${animalEmoji(a)}</span>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:13px">${a.name}</div>
+          <div style="font-size:10px;color:var(--text3)">${dn(a.genes?.color||'')}毛 ${dn(a.genes?.ear||'')} ${a.genes?.horn!=='none'?dn(a.genes?.horn||''):''}</div>
+        </div>
+        <span class="tag ${RARITY_C[a.rarity]}">${RARITY[a.rarity]}</span>
+      </div>
+      <div style="width:100%">
+        <div style="font-size:10px;color:var(--text3)">心情 ${Math.floor(a.mood)}%${a.isBreeding?' ⏳繁殖中':a.mood>=80?' ✨':''}</div>
+        <div class="mood-bar"><div class="mood-fill" style="width:${a.mood}%;background:${moodColor}"></div></div>
+      </div>
+      ${!a.isBreeding?`<div style="display:flex;gap:5px;width:100%">
+        <button class="btn btn-n" style="padding:5px;font-size:10px" onclick="selectBreed('${a.id}','animal')">選配對</button>
+        <button class="btn btn-r" style="padding:5px;font-size:10px" onclick="slaughter('${a.id}')">宰殺🥩</button>
+      </div>`:''}
+    `;
+    list.appendChild(row);
+  }
+  el.appendChild(list);
+
+  btn(el,'擴張牧場 +2（$'+CFG.balance.upgrades.ranch_cap+'）','btn-g',
+    ()=>buyUpgrade('ranch_cap'),G.gold<CFG.balance.upgrades.ranch_cap);
+  btn(el,'購買新'+animalCfg('sheep').name+'（$'+CFG.balance.upgrades.buy_sheep+'）','btn-n',
+    ()=>buyUpgrade('buy_sheep'),G.gold<CFG.balance.upgrades.buy_sheep||G.animals.length>=G.ranchCap);
+
+  const fruits=G.fruits.filter(f=>!f.isBreeding&&!f.isPlanted);
+  if(fruits.length>0){
+    sh(el,'跨種研發（動物×水果）');
+    const fl=mk('div','ilist');
+    for(const f of fruits){
+      const fc=fruitCfg(f.fruitType);
+      const row=mk('div','irow');
+      row.innerHTML=`<span style="font-size:18px">${fc.emoji}</span><span class="irow-name">${f.name}</span><span class="irow-info">${RARITY[f.rarity]}</span>`;
+      row.onclick=()=>selectBreed(f.id,'fruit');
+      fl.appendChild(row);
+    }
+    el.appendChild(fl);
+  }
+}
+
+function showAnimalMenu(a){
+  openPopup(`${animalEmoji(a)} ${a.name}`,[
+    {text:'選為配對對象',fn:()=>{selectBreed(a.id,'animal');closePopup();}},
+    {text:'宰殺→獲得肉塊',cls:'btn-r',fn:()=>{slaughter(a.id);closePopup();}},
+  ]);
+}
+
+function slaughter(id){
+  const a=G.animals.find(x=>x.id===id);
+  if(!a||a.isBreeding)return;
+  const meat=1+a.rarity;
+  G.meatCount+=meat;
+  G.animals=G.animals.filter(x=>x.id!==id);
+  showMsg(`🥩 宰殺！獲得肉塊×${meat}`,'ok');
+  renderZone('ranch');autoSave();
+}
+
+// ══════════════════════════════════════════
+// COOK ZONE
+// ══════════════════════════════════════════
+let cooking=false,cookBubbles=[];
+function buildCook(el){
+  el.innerHTML='';
+  // Scene
+  const scene=mk('div','cook-scene');
+  const fire=mk('div','cook-fire');fire.textContent='🔥';scene.appendChild(fire);
+  const pot=mk('div','pot');pot.textContent='🍳';
+  pot.style.cursor='pointer';
+  pot.onclick=()=>{if(G.fruits.filter(f=>!f.isPlanted&&!f.isBreeding).length>0)cookFruit(false);};
+  scene.appendChild(pot);
+  if(cooking){
+    for(let i=0;i<3;i++){
+      const b=mk('div','bubble');b.textContent='💨';
+      b.style.cssText=`left:${40+i*10}%;bottom:60%;animation-delay:${i*0.4}s`;
+      scene.appendChild(b);
+    }
+  }
+  el.appendChild(scene);
+
+  // Stats
+  const stats=mk('div','');stats.style.cssText='display:flex;gap:8px';
+  const meatC=mk('div','cc');meatC.innerHTML=`<div class="cc-icon">🥩</div><div class="cc-n" style="color:var(--cook)">${G.meatCount}</div><div class="cc-name">肉塊</div>`;
+  const fruitC=mk('div','cc');
+  const fa=G.fruits.filter(f=>!f.isPlanted&&!f.isBreeding).length;
+  fruitC.innerHTML=`<div class="cc-icon">🍎</div><div class="cc-n" style="color:var(--farm)">${fa}</div><div class="cc-name">水果</div>`;
+  const fireC=mk('div','cc');fireC.innerHTML=`<div class="cc-icon">🔥</div><div class="cc-n">${G.crystals.fire||0}</div><div class="cc-name">火晶</div>`;
+  stats.appendChild(meatC);stats.appendChild(fruitC);stats.appendChild(fireC);
+  el.appendChild(stats);
+
+  sh(el,'烹飪');
+  btn(el,'🍳 烹飪水果料理（消耗1個水果）','btn-g',()=>cookFruit(false),fa===0);
+  btn(el,'🔥 火晶烹飪水果（售價+20%）','btn-y',()=>cookFruit(true),fa===0||!G.crystals.fire);
+  btn(el,'🥩 烹飪肉類料理','btn-r',()=>cookMeat(false),G.meatCount===0);
+  btn(el,'🔥 火晶烹飪肉類（+20%）','btn-y',()=>cookMeat(true),G.meatCount===0||!G.crystals.fire);
+
+  if(fa>0){
+    sh(el,'可用水果');
+    const list=mk('div','ilist');
+    for(const f of G.fruits.filter(f=>!f.isPlanted&&!f.isBreeding)){
+      const fc=fruitCfg(f.fruitType);
+      const row=mk('div','irow');
+      const base=fruitSellPrice(f);
+      const cooked=Math.floor(base*(1+f.quality*0.3));
+      row.innerHTML=`<span style="font-size:18px">${fc.emoji}</span><span class="irow-name">${f.name}</span><span class="irow-info">$${base}→烹飪$${cooked}</span>`;
+      list.appendChild(row);
+    }
+    el.appendChild(list);
+  }
+}
+
+function cookFruit(useFire){
+  const fa=G.fruits.filter(f=>!f.isPlanted&&!f.isBreeding);
+  if(!fa.length){showMsg('沒有水果','err');return;}
+  const f=fa[0];
+  let price=Math.floor(fruitSellPrice(f)*(1+f.quality*0.3));
+  if(useFire&&G.crystals.fire>0){G.crystals.fire--;price=Math.floor(price*1.2);}
+  G.fruits=G.fruits.filter(x=>x.id!==f.id);
+  G.gold+=price;
+  cooking=true;setTimeout(()=>{cooking=false;},2000);
+  showMsg(`🍳 水果料理！+$${price}`,'ok');toast(`🍳 +$${price}`);
+  renderZone('cook');autoSave();
+}
+function cookMeat(useFire){
+  if(!G.meatCount){showMsg('沒有肉塊','err');return;}
+  G.meatCount--;
+  let price=80+Math.floor(Math.random()*40);
+  if(useFire&&G.crystals.fire>0){G.crystals.fire--;price=Math.floor(price*1.2);}
+  G.gold+=price;
+  cooking=true;setTimeout(()=>{cooking=false;},2000);
+  showMsg(`🥩 肉類料理！+$${price}`,'ok');toast(`🥩 +$${price}`);
+  renderZone('cook');autoSave();
+}
+
+// ══════════════════════════════════════════
+// CRYSTAL ZONE
+// ══════════════════════════════════════════
+function buildCrystal(el){
+  el.innerHTML='';
+  // Scene
+  const scene=mk('div','crystal-scene');
+  // stars
+  for(let i=0;i<8;i++){
+    const s=mk('div','cs-star');s.textContent='⭐';
+    s.style.cssText=`left:${Math.random()*90}%;top:${Math.random()*60}%;font-size:${8+Math.random()*10}px;animation-delay:${Math.random()*2}s`;
+    scene.appendChild(s);
+  }
+  const now=Date.now();
+  const positions=[15,30,45,60,75,85];
+  G.crystalNodes.forEach((n,i)=>{
+    const ready=now>=n.readyAt;
+    const crystal=mk('div','cs-crystal');
+    const cc=CFG.crystals.find(c=>c.id===n.type);
+    crystal.textContent=cc?.emoji||'💎';
+    crystal.style.left=positions[i%positions.length]+'%';
+    crystal.style.fontSize=ready?'36px':'28px';
+    if(ready){
+      crystal.classList.add('ready');
+      crystal.title='點擊挖掘！';
+      crystal.onclick=()=>{crystal.classList.add('dig-anim');setTimeout(()=>harvestCrystal(n.id),200);};
+    }
+    scene.appendChild(crystal);
+  });
+  el.appendChild(scene);
+
+  sh(el,'晶石庫存');
+  const cg=mk('div','cg');
+  for(const cc of CFG.crystals){
+    const c=mk('div','cc');
+    if(cc.id==='dark')c.style.cssText='background:#ffe8e8;border-color:#ffb0b0';
+    const cnt=G.crystals[cc.id]||0;
+    c.innerHTML=`<div class="cc-icon">${cc.emoji}</div><div class="cc-n" style="${cc.id==='dark'?'color:#cc2222':''}">${cnt}</div><div class="cc-name">${cc.name}</div>`;
+    cg.appendChild(c);
+  }
+  el.appendChild(cg);
+
+  sh(el,'可挖掘');
+  const ready=G.crystalNodes.filter(n=>now>=n.readyAt);
+  if(!ready.length){
+    const p=mk('p','');p.textContent='晶石生長中，稍後再來';
+    p.style.cssText='font-size:12px;color:var(--text3);text-align:center;padding:8px';
+    el.appendChild(p);
+  } else {
+    for(const n of ready){
+      const cc=CFG.crystals.find(c=>c.id===n.type);
+      btn(el,`${cc?.emoji} 挖掘 ${cc?.name}`,'btn-p',()=>harvestCrystal(n.id));
+    }
+  }
+
+  sh(el,'生長中');
+  const growing=G.crystalNodes.filter(n=>now<n.readyAt);
+  for(const n of growing){
+    const cc=CFG.crystals.find(c=>c.id===n.type);
+    const rem=Math.ceil((n.readyAt-now)/1000);
+    const p=mk('p','');p.textContent=`${cc?.emoji} ${cc?.name}：${rem}秒後`;
+    p.style.cssText='font-size:11px;color:var(--text3)';
+    el.appendChild(p);
+  }
+
+  btn(el,'擴張晶洞（$'+CFG.balance.upgrades.crystal_node+'）','btn-p',
+    ()=>buyUpgrade('crystal_node'),G.gold<CFG.balance.upgrades.crystal_node);
+
+  sh(el,'晶石效果');
+  const desc=mk('div','');
+  desc.style.cssText='font-size:12px;color:var(--text2);line-height:1.8;background:rgba(255,255,255,0.15);border-radius:8px;padding:10px;color:white';
+  for(const cc of CFG.crystals){
+    const effs=[];
+    if(cc.cookBonus)effs.push(`烹飪+${(cc.cookBonus*100).toFixed(0)}%`);
+    if(cc.breedSpeedMult)effs.push(`繁殖加速`);
+    if(cc.mutationMult)effs.push(`突變率×${cc.mutationMult}`);
+    desc.innerHTML+=`${cc.emoji} <b>${cc.name}</b>：${effs.join('，')}<br>`;
+  }
+  el.appendChild(desc);
+
+  btn(el,'啟動暗晶（庫存：'+(G.crystals.dark||0)+'）','btn-p',
+    activateDark,!G.crystals.dark);
+}
+
+function harvestCrystal(id){
+  const n=G.crystalNodes.find(x=>x.id===id);
+  if(!n||Date.now()<n.readyAt)return;
+  G.crystals[n.type]=(G.crystals[n.type]||0)+1;
+  G.crystalNodes=G.crystalNodes.filter(x=>x.id!==id);
+  spawnCrystalNode();
+  const cc=CFG.crystals.find(c=>c.id===n.type);
+  showMsg(`💎 挖到 ${cc?.name}！`,'ok');toast(`${cc?.emoji} +1 ${cc?.name}`);
+  renderZone('crystal');autoSave();
+}
+
+function activateDark(){
+  if(!G.crystals.dark){showMsg('沒有暗晶','err');return;}
+  G.crystals.dark--;G.darkActive=true;
+  showMsg('🌑 暗晶啟動！下次繁殖突變率×5','ok');toast('🌑 暗晶！');
+  renderZone('crystal');autoSave();
+}
+
+// ══════════════════════════════════════════
+// BREED UI
+// ══════════════════════════════════════════
+let bA=null,bB=null;
+function selectBreed(id,type){
+  const name=type==='animal'?G.animals.find(a=>a.id===id)?.name:G.fruits.find(f=>f.id===id)?.name;
+  const icon=type==='animal'?animalEmoji(G.animals.find(a=>a.id===id)):'🍎';
+  if(!bA){
+    bA={id,type};
+    const s=document.getElementById('bs-a');s.textContent=`${icon} ${name}`;s.classList.add('on');
+    showMsg(`已選：${name}，再選一個`);
+  } else if(!bB){
+    if(id===bA.id){showMsg('不能選同一個','err');return;}
+    bB={id,type};
+    const s=document.getElementById('bs-b');s.textContent=`${icon} ${name}`;s.classList.add('on');
+    const na=bA.type==='animal'?G.animals.find(a=>a.id===bA.id)?.name:G.fruits.find(f=>f.id===bA.id)?.name;
+    showMsg(`${na} × ${name}，按開始繁殖`);
+  } else {
+    bA={id,type};bB=null;
+    const sa=document.getElementById('bs-a'),sb=document.getElementById('bs-b');
+    sa.textContent=`${icon} ${name}`;sa.classList.add('on');
+    sb.textContent='點擊選擇';sb.classList.remove('on');
+    showMsg(`重選：${name}`);
+  }
+}
+function clearSlot(s){
+  if(s==='a'){bA=null;const el=document.getElementById('bs-a');el.textContent='點擊選擇';el.classList.remove('on');}
+  else{bB=null;const el=document.getElementById('bs-b');el.textContent='點擊選擇';el.classList.remove('on');}
+}
+function clearBreed(){bA=null;bB=null;clearSlot('a');clearSlot('b');showMsg('已清除');}
+
+function startBreed(){
+  if(!bA||!bB){showMsg('請選兩個','err');return;}
+  const now=Date.now();
+  let dur=CFG.balance.breedBase*1000,type='';
+  const na=bA.type==='animal'?G.animals.find(a=>a.id===bA.id)?.name:G.fruits.find(f=>f.id===bA.id)?.name;
+  const nb=bB.type==='animal'?G.animals.find(a=>a.id===bB.id)?.name:G.fruits.find(f=>f.id===bB.id)?.name;
+
+  if(bA.type==='animal'&&bB.type==='animal'){
+    const pa=G.animals.find(a=>a.id===bA.id),pb=G.animals.find(a=>a.id===bB.id);
+    if(!pa||!pb||pa.isBreeding||pb.isBreeding){showMsg('無法繁殖','err');return;}
+    if(pa.species!==pb.species){showMsg('物種不同','err');return;}
+    if(G.animals.length>=G.ranchCap){showMsg('牧場已滿','err');return;}
+    const mf=1.5-((pa.mood+pb.mood)/200)*.5;dur*=mf;
+    if(G.crystals.dew>0){G.crystals.dew--;dur*=(CFG.crystals.find(c=>c.id==='dew')?.breedSpeedMult||0.6);}
+    pa.isBreeding=true;pb.isBreeding=true;type='axа';
+  } else if(bA.type==='fruit'&&bB.type==='fruit'){
+    const pa=G.fruits.find(f=>f.id===bA.id),pb=G.fruits.find(f=>f.id===bB.id);
+    if(!pa||!pb||pa.isBreeding||pb.isBreeding){showMsg('無法繁殖','err');return;}
+    pa.isBreeding=true;pb.isBreeding=true;type='fxf';
+  } else {
+    const aid=bA.type==='animal'?bA.id:bB.id,fid=bA.type==='fruit'?bA.id:bB.id;
+    const a=G.animals.find(x=>x.id===aid),f=G.fruits.find(x=>x.id===fid);
+    if(!a||!f||a.isBreeding||f.isBreeding){showMsg('無法繁殖','err');return;}
+    a.isBreeding=true;f.isBreeding=true;dur*=1.5;type='axf';
+  }
+  G.breedingSlots.push({type,pA:bA.id,pB:bB.id,finishAt:now+dur,nameA:na,nameB:nb,startAt:now});
+  showMsg(`🥚 繁殖開始！約${Math.ceil(dur/1000)}秒後完成`,'ok');
+  clearBreed();autoSave();
+}
+
+function speedBreed(){
+  if(!G.breedingSlots.length){showMsg('沒有進行中的繁殖','err');return;}
+  const cost=CFG.balance.speedBreedCost||100;
+  if(G.gold<cost){showMsg(`金幣不足（需$${cost}）`,'err');return;}
+  G.gold-=cost;
+  for(const s of G.breedingSlots) s.finishAt=Date.now()-1;
+  showMsg(`⚡ 花費$${cost}加速完成！`,'ok');toast(`⚡ 加速！-$${cost}`);
+  autoSave();
+}
+
+// ══════════════════════════════════════════
+// UPGRADES
+// ══════════════════════════════════════════
+function buyUpgrade(type){
+  const cost=CFG.balance.upgrades[type]||9999;
+  if(G.gold<cost){showMsg('金幣不足','err');return;}
+  G.gold-=cost;
+  if(type==='farm_slot'){G.farmSlotCount+=2;G.farmSlots.push(null,null);}
+  else if(type==='ranch_cap')G.ranchCap+=2;
+  else if(type==='cook_slot')G.cookSlotCount=(G.cookSlotCount||1)+1;
+  else if(type==='crystal_node'){for(let i=0;i<2;i++)spawnCrystalNode();}
+  else if(type==='buy_sheep'){
+    if(G.animals.length>=G.ranchCap){showMsg('牧場已滿','err');G.gold+=cost;return;}
+    const a=createWildAnimal('sheep');a.name='新羊';G.animals.push(a);toast('🐑 新羊！');
+  }
+  showMsg('✅ 購買成功！','ok');
+  if(currentZone)renderZone(currentZone);autoSave();
+}
+
+// ══════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════
+function mk(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function sh(parent,text){
+  const s=mk('div','sh');s.innerHTML=`<span>${text}</span>`;parent.appendChild(s);
+}
+function btn(parent,text,cls,fn,disabled=false){
+  const b=mk('button','btn '+(cls||'btn-n'));
+  b.textContent=text;b.onclick=fn;b.disabled=disabled;
+  parent.appendChild(b);return b;
+}
+function showMsg(msg,type=''){
+  const el=document.getElementById('msg');
+  el.textContent=msg;el.className=type;
+}
+let toastT=null;
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  if(toastT)clearTimeout(toastT);
+  toastT=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// POPUP
+function openPopup(title,btns){
+  const box=document.getElementById('popup-box');
+  document.getElementById('popup-title').textContent=title;
+  const content=document.getElementById('popup-content');
+  content.innerHTML='';
+  for(const b of btns){
+    const el=mk('button','btn '+(b.cls||'btn-n'));
+    el.textContent=b.text;el.onclick=b.fn;content.appendChild(el);
+  }
+  document.getElementById('popup').classList.add('open');
+}
+function closePopup(){document.getElementById('popup').classList.remove('open');}
+
+// ══════════════════════════════════════════
+// UPDATE UI
+// ══════════════════════════════════════════
+function updateUI(){
+  document.getElementById('s-gold').textContent=G.gold;
+  document.getElementById('s-anim').textContent=G.animals.length;
+  document.getElementById('s-cap').textContent=G.ranchCap;
+  document.getElementById('s-fruit').textContent=G.fruits.length;
+  document.getElementById('s-meat').textContent=G.meatCount;
+  document.getElementById('c-fire').textContent=G.crystals.fire||0;
+  document.getElementById('c-dew').textContent=G.crystals.dew||0;
+  document.getElementById('c-dark').textContent=G.crystals.dark||0;
+  document.getElementById('speed-cost').textContent=CFG.balance.speedBreedCost||100;
+  updateAnimalList();updateFruitList();updateBreedQueue();
+}
+
+function updateAnimalList(){
+  const el=document.getElementById('al');el.innerHTML='';
+  if(!G.animals.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px;text-align:center">還沒有動物</div>';return;}
+  for(const a of G.animals){
+    const c=mk('div','mini-card');
+    const moodC=a.mood>=80?'var(--farm)':a.mood>=50?'var(--ranch)':'var(--cook)';
+    c.innerHTML=`
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-size:20px">${animalEmoji(a)}</span>
+        <div><div class="mini-card-name">${a.name}</div>
+        <div class="mini-tags"><span class="tag ${RARITY_C[a.rarity]}">${RARITY[a.rarity]}</span><span class="tag">${dn(a.genes?.color||'')}毛</span></div></div>
+      </div>
+      <div class="mood-bar"><div class="mood-fill" style="width:${a.mood}%;background:${moodC}"></div></div>
+    `;
+    el.appendChild(c);
+  }
+}
+
+function updateFruitList(){
+  const el=document.getElementById('fl');el.innerHTML='';
+  if(!G.fruits.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:6px;text-align:center">還沒有水果</div>';return;}
+  for(const f of G.fruits){
+    const fc=fruitCfg(f.fruitType);
+    const c=mk('div','mini-card');
+    const st=f.isPlanted?'🌱':f.isBreeding?'⏳':'';
+    c.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:18px">${fc.emoji}</span><div><div class="mini-card-name">${f.name}</div><div class="mini-tags"><span class="tag ${RARITY_C[f.rarity]}">${RARITY[f.rarity]}</span>${st?`<span class="tag">${st}</span>`:''}<span class="tag">$${fruitSellPrice(f)}</span></div></div></div>`;
+    el.appendChild(c);
+  }
+}
+
+function updateBreedQueue(){
+  const el=document.getElementById('bq');el.innerHTML='';
+  if(!G.breedingSlots.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);text-align:center">無</div>';return;}
+  const now=Date.now();
+  for(const s of G.breedingSlots){
+    const rem=Math.max(0,Math.ceil((s.finishAt-now)/1000));
+    const total=(s.finishAt-(s.startAt||s.finishAt-CFG.balance.breedBase*1000));
+    const prog=total>0?Math.min(100,((now-(s.startAt||now-total))/total)*100):50;
+    const typL={axа:'動物繁殖',fxf:'水果培育',axf:'跨種研發'}[s.type]||'繁殖';
+    const c=mk('div','bq-item');
+    c.innerHTML=`<div class="bq-type">${typL}</div><div class="bq-names">${s.nameA||'?'} × ${s.nameB||'?'}</div><div class="bq-rem">剩 ${rem}秒</div><div class="pb"><div class="pbf" style="width:${prog.toFixed(0)}%;background:var(--crystal)"></div></div>`;
+    el.appendChild(c);
+  }
+}
+
+// ══════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════
+function saveGame(){
+  localStorage.setItem('pt_save',JSON.stringify(G));
+  localStorage.setItem('pt_cfg',JSON.stringify(CFG));
+  const ok=document.getElementById('save-ok');ok.classList.add('show');
+  setTimeout(()=>ok.classList.remove('show'),2000);
+  toast('💾 存檔');
+}
+function loadGame(){
+  try{
+    const raw=localStorage.getItem('pt_save');
+    if(raw){Object.assign(G,JSON.parse(raw));return true;}
+  }catch(e){}
+  return false;
+}
+function loadCfg(){
+  try{
+    const raw=localStorage.getItem('pt_cfg');
+    if(raw) Object.assign(CFG,JSON.parse(raw));
+  }catch(e){}
+}
+let autoT=null;
+function autoSave(){
+  if(autoT)clearTimeout(autoT);
+  autoT=setTimeout(saveGame,3000);
+}
+setInterval(saveGame,60000);
+
+// Cloud config fetch
+async function fetchCloudCfg(){
+  if(!CFG.cloudUrl)return;
+  try{
+    const r=await fetch(CFG.cloudUrl);
+    if(r.ok){const data=await r.json();Object.assign(CFG,data);toast('☁️ 雲端設定已更新');}
+  }catch(e){console.warn('雲端設定載入失敗',e);}
+}
+
+// ══════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════
+const ADMIN_PW='admin888';
+function openAdmin(){
+  const pw=prompt('請輸入後台密碼：');
+  if(pw!==ADMIN_PW){if(pw!==null)alert('密碼錯誤');return;}
+  window.open('pasture_admin.html','_blank');
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+function newGame(){
+  G={gold:500,animals:[],fruits:[],breedingSlots:[],
+    farmSlots:[null,null,null,null],crystals:{fire:0,dew:0,dark:0},
+    crystalNodes:[],meatCount:0,darkActive:false,ranchCap:6,farmSlotCount:4,codexAnimal:[]};
+  const a=createWildAnimal('sheep');a.name='小白';G.animals.push(a);
+  const b=createWildAnimal('sheep');b.name='小棕';G.animals.push(b);
+  const f=createWildFruit('apple');f.name='初始蘋果';G.fruits.push(f);
+  initCrystalNodes();
+}
+
+window.addEventListener('load',async()=>{
+  loadCfg();
+  await fetchCloudCfg();
+  if(!loadGame()) newGame();
+  else{G.crystalNodes=G.crystalNodes||[];initCrystalNodes();G.crystals=G.crystals||{fire:0,dew:0,dark:0};}
+  resizeCanvas();
+  updateUI();
+  toast(localStorage.getItem('pt_save')?'📂 歡迎回來！':'🌿 歡迎來到牧野物語！');
+});
+window.addEventListener('resize',resizeCanvas);
+</script>
+</body>
+</html>
