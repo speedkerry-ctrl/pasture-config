@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>牧野物語</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --W:390px;
+  --p:#fff8e6;--p2:#fff3d8;--bd:#d4b060;--bd2:#e8c880;
+  --g:#48a835;--gd:#2a7a18;--gl:#d8f0c8;
+  --r:#cc4040;--o:#e08830;--od:#a05808;
+  --pu:#7848c0;--gold:#f0b820;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif;
+  background:#111;display:flex;justify-content:center}
+#root{width:var(--W);height:100%;position:relative;background:#0d1a08;
+  overflow:hidden;display:flex;flex-direction:column}
+
+/* ── TOP BAR ── */
+#topbar{height:50px;background:rgba(4,12,2,.97);border-bottom:2px solid rgba(212,176,96,.3);
+  display:flex;align-items:center;padding:0 8px;gap:6px;flex-shrink:0;z-index:50}
+#topbar h1{font-size:16px;font-weight:900;color:#f0e0a0;white-space:nowrap}
+#topbar h1 em{color:#7de870;font-style:normal}
+.stat{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(212,176,96,.25);border-radius:10px;padding:3px 8px;
+  font-size:13px;font-weight:800;color:#f0e0b0;white-space:nowrap}
+#topbar .spacer{flex:1}
+.hbtn{background:rgba(255,255,255,.09);border:1px solid rgba(212,176,96,.25);
+  border-radius:9px;padding:5px 7px;color:#c8b070;font-family:'Nunito',sans-serif;
+  font-size:12px;font-weight:800;cursor:pointer}
+.hbtn.gold{border-color:var(--gold);color:var(--gold)}
+#bag-btn{background:var(--p);border:2px solid var(--bd);border-radius:10px;
+  padding:4px 10px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:900;
+  cursor:pointer;color:#3a2a08;display:flex;align-items:center;gap:2px}
+
+/* ── SCREENS ── */
+#screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;display:none;flex-direction:column}
+.screen.active{display:flex}
+
+/* ════════════════════════════════
+   OVERVIEW MAP (首頁 2×2 磚)
+════════════════════════════════ */
+#ov-screen{background:#0d1a08}
+.ov-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;padding:8px}
+.ov-tile{border-radius:18px;overflow:hidden;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;border:2px solid rgba(255,255,255,.08);
+  transition:transform .15s,box-shadow .15s;touch-action:manipulation}
+.ov-tile:active{transform:scale(.96)}
+/* 農場 */
+.ov-farm{background:linear-gradient(160deg,#5aaa32 0%,#3a8820 45%,#2a6818 100%)}
+/* 牧場 */
+.ov-ranch{background:linear-gradient(160deg,#4a90d4 0%,#3070a8 40%,#5aaa32 70%,#3a7820 100%)}
+/* 烹飪 */
+.ov-cook{background:linear-gradient(160deg,#4a1e08 0%,#2a0e04 60%,#8a3808 100%)}
+/* 晶洞 */
+.ov-crystal{background:linear-gradient(160deg,#0a0228 0%,#180848 50%,#050118 100%)}
+
+.ov-tile-top{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ov-tile-bg{position:absolute;inset:0}
+.ov-tile-ico{font-size:52px;position:relative;z-index:2;filter:drop-shadow(0 3px 8px rgba(0,0,0,.5))}
+.ov-tile-bot{padding:6px 10px 8px;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:space-between}
+.ov-tile-name{font-size:15px;font-weight:900;color:white;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+.ov-tile-hint{font-size:11px;font-weight:700;color:rgba(255,255,255,.7)}
+
+/* 農場磚裝飾 */
+.ov-farm .ov-tile-bg{
+  background:
+    radial-gradient(ellipse 80px 25px at 20% 15%,rgba(255,255,255,.65) 50%,transparent),
+    radial-gradient(ellipse 55px 18px at 70% 10%,rgba(255,255,255,.55) 50%,transparent),
+    linear-gradient(180deg,#7dd8f0 0%,#a8e8c0 35%,#5aaa32 55%,#3a7820 100%)}
+/* 牧場磚裝飾 */
+.ov-ranch .ov-tile-bg{
+  background:
+    radial-gradient(ellipse 60px 20px at 25% 12%,rgba(255,255,255,.7) 50%,transparent),
+    radial-gradient(ellipse 45px 15px at 70% 8%,rgba(255,255,255,.6) 50%,transparent),
+    linear-gradient(180deg,#5abaec 0%,#90d8f8 30%,#5aaa32 55%,#3a7820 100%)}
+/* 烹飪磚裝飾 */
+.ov-cook .ov-tile-bg{
+  background:
+    radial-gradient(ellipse 60px 30px at 50% 80%,rgba(255,120,20,.25),transparent),
+    repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(0,0,0,.06) 14px,rgba(0,0,0,.06) 16px),
+    linear-gradient(180deg,#3a1808 0%,#200c04 100%)}
+/* 晶洞磚裝飾 */
+.ov-crystal .ov-tile-bg{
+  background:
+    radial-gradient(ellipse 80px 40px at 50% 60%,rgba(120,60,255,.3),transparent),
+    radial-gradient(ellipse 40px 20px at 20% 30%,rgba(60,20,180,.3),transparent),
+    linear-gradient(180deg,#020110 0%,#0a0330 60%,#050118 100%)}
+
+/* ov 磚上的迷你圖示 */
+.ov-mini-pot{position:absolute;background:linear-gradient(180deg,#7a4a18,#4a2808);
+  border:2px solid #3a1a04;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:14px}
+.ov-mini-star{position:absolute;border-radius:50%;background:rgba(255,255,255,.9);animation:twk 2s infinite}
+@keyframes twk{0%,100%{opacity:.2}50%{opacity:1}}
+.ov-badge{position:absolute;top:6px;right:6px;background:var(--r);color:white;
+  border-radius:10px;padding:2px 7px;font-size:11px;font-weight:900;z-index:10}
+
+/* ════════════════════════════════
+   ZONE DETAIL (全螢幕區域)
+════════════════════════════════ */
+#zone-screen{background:#0d1a08}
+#zone-back{position:absolute;top:8px;left:8px;z-index:30;
+  background:rgba(0,0,0,.55);border:1.5px solid rgba(255,255,255,.3);
+  border-radius:12px;padding:6px 12px;color:white;font-family:'Nunito',sans-serif;
+  font-size:13px;font-weight:900;cursor:pointer;backdrop-filter:blur(4px)}
+#zone-header{position:absolute;top:0;left:0;right:0;height:44px;
+  background:rgba(0,0,0,.5);display:flex;align-items:center;
+  padding:0 52px 0 52px;justify-content:center;z-index:20;
+  border-bottom:1px solid rgba(255,255,255,.1);backdrop-filter:blur(6px)}
+#zone-title{font-size:16px;font-weight:900;color:white}
+.zone-content{position:absolute;inset:44px 0 56px 0;overflow:hidden}
+#zone-btm{position:absolute;bottom:0;left:0;right:0;height:56px;
+  background:rgba(4,12,2,.97);border-top:1px solid rgba(212,176,96,.2);
+  display:flex;align-items:center;gap:5px;padding:6px 10px;z-index:20}
+.zb{flex:1;border:none;border-radius:10px;padding:10px 4px;font-family:'Nunito',sans-serif;
+  font-size:12px;font-weight:900;cursor:pointer;color:white;text-align:center;
+  transition:all .15s;white-space:nowrap}
+.zb:active{transform:scale(.97)}
+.zb-g{background:var(--gd)}.zb-o{background:var(--od)}
+.zb-r{background:var(--r)}.zb-p{background:var(--pu)}
+.zb-n{background:rgba(255,255,255,.18);color:rgba(255,255,255,.85)}
+.zb-y{background:#906000}
+
+/* area tabs (sub-zones) */
+.area-tabs{position:absolute;top:52px;left:50%;transform:translateX(-50%);
+  z-index:25;display:flex;gap:5px}
+.atab{min-width:55px;height:26px;border-radius:10px;border:2px solid rgba(255,255,255,.4);
+  background:rgba(0,0,0,.5);color:white;font-size:11px;font-weight:900;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 8px}
+.atab.on{background:rgba(255,255,255,.3);border-color:white}
+
+/* ════════════════════════════════
+   FARM ZONE
+════════════════════════════════ */
+#farm-zone{position:absolute;inset:0;
+  background:linear-gradient(180deg,#72c8f0 0%,#a8e8d0 25%,#76ba46 50%,#5a9838 70%,#3a6820 100%)}
+/* 雲層 */
+#farm-zone::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80px 26px at 15% 8%,rgba(255,255,255,.8) 55%,transparent),
+    radial-gradient(ellipse 55px 18px at 23% 4%,rgba(255,255,255,.65) 55%,transparent),
+    radial-gradient(ellipse 65px 22px at 72% 6%,rgba(255,255,255,.75) 55%,transparent),
+    radial-gradient(ellipse 45px 15px at 82% 10%,rgba(255,255,255,.6) 55%,transparent)}
+/* 地面腰線裝飾 */
+#farm-zone::after{content:'';position:absolute;left:0;right:0;bottom:0;height:22px;
+  background:repeating-linear-gradient(90deg,#3a6820,#3a6820 12px,#4a7830 12px,#4a7830 24px);
+  pointer-events:none}
+.farm-inner{position:absolute;top:44px;left:0;right:0;bottom:0;
+  display:flex;align-items:flex-start;justify-content:center;padding:12px 12px 28px}
+.pot-grid{display:grid;gap:10px;width:100%}
+.pot-grid.c2{grid-template-columns:1fr 1fr}
+.pot-grid.c3{grid-template-columns:1fr 1fr 1fr}
+.pot{background:linear-gradient(180deg,#7a4e1a,#5a3010);border:3px solid #3a1a06;
+  border-radius:16px;min-height:88px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;transition:all .18s;
+  padding:10px 6px;box-shadow:0 4px 12px rgba(0,0,0,.4),inset 0 2px 4px rgba(255,255,255,.08)}
+.pot:active{transform:scale(.96)}
+.pot.ripe{border-color:#f0d020;box-shadow:0 0 22px rgba(240,208,32,.75),0 4px 12px rgba(0,0,0,.3)}
+.pot-ico{font-size:30px;line-height:1;min-height:32px;display:flex;align-items:center;justify-content:center}
+.pot-lbl{font-size:11px;font-weight:800;color:rgba(255,255,255,.95);
+  text-shadow:0 1px 3px rgba(0,0,0,.8);margin-top:5px;text-align:center;line-height:1.3}
+.pot-bar{width:75%;height:4px;background:rgba(0,0,0,.35);border-radius:2px;margin-top:5px;overflow:hidden}
+.pot-fill{height:100%;background:linear-gradient(90deg,#f0b820,#ffe060);border-radius:2px;transition:width .5s}
+/* 農場圍欄 */
+.farm-fence{position:absolute;left:0;right:0;bottom:22px;height:20px;z-index:2;pointer-events:none;
+  background:linear-gradient(180deg,#d0a050,#a07030);
+  border-top:3px solid #e8c070;border-bottom:2px solid #805020}
+.farm-fence::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 17px,rgba(0,0,0,.2) 17px,rgba(0,0,0,.2) 20px)}
+
+/* ════════════════════════════════
+   RANCH ZONE
+════════════════════════════════ */
+#ranch-zone{position:absolute;inset:0;overflow:hidden}
+#rcanvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+#ral{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:5}
+.pw{position:absolute;display:flex;flex-direction:column;align-items:center;
+  cursor:grab;pointer-events:all;z-index:10;user-select:none}
+.pw:active{cursor:grabbing}
+.pw canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+.pw-nm{font-size:10px;font-weight:900;color:white;text-align:center;
+  text-shadow:0 1px 4px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.8);
+  white-space:nowrap;margin-top:1px;line-height:1.2}
+.pw-mb{width:34px;height:3px;background:rgba(0,0,0,.45);border-radius:2px;margin-top:2px;overflow:hidden}
+.pw-mbf{height:100%;border-radius:2px;transition:width .5s}
+.pemo{position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+  font-size:15px;pointer-events:none;z-index:20;animation:emoUp 1.4s ease-out forwards}
+@keyframes emoUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-30px)}}
+
+/* ════════════════════════════════
+   COOK ZONE
+════════════════════════════════ */
+#cook-zone{position:absolute;inset:0;
+  background:linear-gradient(180deg,#2a1206 0%,#160804 55%,#0e0402 100%)}
+/* 磚牆紋理 */
+#cook-zone::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 16px,rgba(60,20,5,.4) 16px,rgba(60,20,5,.4) 18px),
+    repeating-linear-gradient(90deg,transparent,transparent 22px,rgba(30,10,0,.25) 22px,rgba(30,10,0,.25) 24px)}
+/* 地面爐火光 */
+#cook-zone::after{content:'';position:absolute;bottom:0;left:0;right:0;height:100px;
+  background:radial-gradient(ellipse 260px 80px at 50% 100%,rgba(255,100,20,.15),transparent);
+  pointer-events:none}
+.cook-inner{position:absolute;inset:44px 0 0 0;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;gap:12px;padding:12px 16px;z-index:2;overflow-y:auto}
+.ck-slots-row{display:flex;gap:12px;align-items:center;width:100%;justify-content:center}
+.ck-slot{width:108px;height:108px;background:rgba(0,0,0,.5);
+  border:3px dashed rgba(255,160,50,.5);border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;position:relative;flex-shrink:0}
+.ck-slot.filled{border-style:solid;border-color:rgba(255,160,50,.85)}
+.ck-slot:active{border-color:rgba(255,180,80,.9);transform:scale(1.04)}
+.ck-slot-ico{font-size:38px;line-height:1}
+.ck-slot-nm{font-size:10px;font-weight:800;color:rgba(255,210,130,.9);margin-top:4px;text-align:center}
+.ck-slot-x{position:absolute;top:4px;right:6px;font-size:14px;color:rgba(255,100,100,.9);font-weight:900;cursor:pointer;z-index:2}
+.ck-plus{font-size:26px;color:rgba(255,160,60,.7);font-weight:900;flex-shrink:0}
+.ck-cs-row{display:flex;gap:10px;align-items:center;width:100%;justify-content:center}
+.ck-cs{width:60px;height:60px;background:rgba(80,30,150,.4);
+  border:3px dashed rgba(160,110,255,.5);border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;flex-shrink:0}
+.ck-cs.filled{border-style:solid;border-color:rgba(160,110,255,.85)}
+.ck-res{flex:1;background:rgba(0,0,0,.45);border:2px solid rgba(255,160,50,.25);
+  border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:6px;min-height:48px}
+.ck-res-txt{font-size:11px;font-weight:800;color:rgba(255,210,130,.85)}
+.ck-fire{font-size:17px;animation:flicker .5s ease-in-out infinite alternate}
+@keyframes flicker{from{transform:scale(1)}to{transform:scale(1.15) scaleX(.91)}}
+.ck-gobtn{border:none;border-radius:14px;padding:13px;width:100%;
+  font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;
+  cursor:pointer;color:white;background:var(--r);transition:all .15s;flex-shrink:0}
+.ck-gobtn:disabled{opacity:.38;cursor:not-allowed}
+.ck-queue{width:100%;display:flex;flex-wrap:wrap;gap:6px;padding-bottom:8px}
+.cqi{background:rgba(0,0,0,.55);border:2px solid rgba(255,160,50,.45);
+  border-radius:10px;padding:5px 9px;display:flex;align-items:center;gap:5px;cursor:pointer}
+.cqi.rdy{border-color:var(--gold);box-shadow:0 0 10px rgba(240,184,32,.4)}
+.cqi-ico{font-size:17px}.cqi-nm{font-size:11px;font-weight:800;color:rgba(255,210,130,.9)}
+.cqi-t{font-size:10px;color:rgba(255,170,80,.75);font-weight:700}
+.blyr{position:absolute;inset:0;pointer-events:none;z-index:10}
+
+/* ════════════════════════════════
+   CRYSTAL ZONE
+════════════════════════════════ */
+#crystal-zone{position:absolute;inset:0;overflow:hidden;
+  background:linear-gradient(180deg,#010108 0%,#040120 35%,#08032a 65%,#050118 100%)}
+/* 極光層 */
+#crystal-zone::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 280px 110px at 25% 35%,rgba(80,20,200,.2),transparent 70%),
+    radial-gradient(ellipse 230px 90px at 75% 22%,rgba(20,90,200,.15),transparent 70%),
+    radial-gradient(ellipse 180px 70px at 50% 55%,rgba(110,30,220,.12),transparent 70%)}
+.cs-strs{position:absolute;inset:0;pointer-events:none;z-index:1}
+.cs-st{position:absolute;border-radius:50%;background:white;animation:twk 2s infinite}
+/* 地面 */
+.cs-gnd{position:absolute;bottom:0;left:0;right:0;height:40%;z-index:2;
+  background:linear-gradient(180deg,#1a0640 0%,#0c0228 55%,#060116 100%);
+  border-top:2px solid rgba(150,80,255,.55);
+  box-shadow:0 -6px 32px rgba(100,40,220,.4),0 -1px 0 rgba(200,160,255,.18)}
+/* 鐘乳石 */
+.cs-stlcs{position:absolute;top:0;left:0;right:0;height:24%;z-index:3}
+.stlc{position:absolute;top:0;
+  background:linear-gradient(180deg,#180548 0%,rgba(30,8,100,.6) 100%);
+  border-radius:0 0 7px 7px;
+  box-shadow:0 5px 14px rgba(80,30,180,.5),inset 0 0 8px rgba(150,80,255,.12)}
+/* 晶石節點層 */
+.cs-ndlyr{position:absolute;left:0;right:0;bottom:0;height:78%;z-index:5;pointer-events:all}
+.csnd{position:absolute;text-align:center;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;transform-origin:bottom center}
+.csnd:active{transform:scale(1.2)!important;filter:brightness(1.5)!important}
+.csnd.growing{opacity:.65;animation:csG 2.8s ease-in-out infinite alternate}
+.csnd.ready{animation:csR 1.3s ease-in-out infinite alternate}
+@keyframes csG{from{transform:scale(.5) translateY(10px)}to{transform:scale(.92)}}
+@keyframes csR{
+  from{filter:drop-shadow(0 0 6px rgba(160,120,255,.6))}
+  to{filter:drop-shadow(0 0 22px rgba(230,190,255,1));transform:scale(1.14)}}
+.csnd-lbl{font-size:9px;font-weight:800;margin-top:3px;
+  background:rgba(0,0,0,.6);border-radius:6px;padding:1px 5px;white-space:nowrap}
+.csnd.fire .csnd-lbl{color:#ffb870;text-shadow:0 0 6px rgba(255,120,30,.9)}
+.csnd.dew .csnd-lbl{color:#80dcff;text-shadow:0 0 6px rgba(40,160,255,.9)}
+.csnd.light .csnd-lbl{color:#ffee80;text-shadow:0 0 6px rgba(255,220,60,.9)}
+.csnd.ready .csnd-lbl{color:white}
+.csbat{position:absolute;top:14%;animation:batF 8s linear infinite;opacity:.45;font-size:15px;z-index:8}
+@keyframes batF{0%{left:-5%}55%{top:32%}100%{left:110%}}
+
+/* ════════════════════════════════
+   OVERLAYS
+════════════════════════════════ */
+.ov{position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.62);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s}
+.ov.open{opacity:1;pointer-events:all}
+.obox{background:var(--p);border-radius:22px 22px 0 0;
+  width:var(--W);max-height:88vh;overflow-y:auto;
+  padding:16px;box-shadow:0 -8px 32px rgba(0,0,0,.6);
+  transform:translateY(100%);transition:transform .3s}
+.ov.open .obox{transform:translateY(0)}
+.odrag{width:40px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 14px}
+.obox h2{font-size:16px;font-weight:900;color:#3a2a08;margin-bottom:12px}
+.ocl{position:absolute;top:14px;right:16px;background:none;border:none;
+  font-size:22px;cursor:pointer;color:#8a6a30;font-weight:900}
+
+/* bag */
+.bag-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.btab{flex:1;min-width:55px;border:none;border-radius:10px;padding:8px 4px;
+  font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer}
+.btab.on{background:var(--g);color:white}
+.btab.off{background:var(--p2);color:#5a3a10;border:1.5px solid var(--bd2)}
+.btab.batch-on{background:var(--r);color:white}
+.bag-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.bag-item{background:var(--p2);border:2px solid var(--bd2);border-radius:12px;
+  padding:9px 5px;text-align:center;cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;align-items:center;position:relative}
+.bag-item:active{transform:scale(.96)}
+.bag-item.sel{border-color:var(--g);border-width:2.5px}
+.bag-item.batch-chk{border-color:var(--r);border-width:2.5px;background:#fff0f0}
+.bi-ico{font-size:26px;line-height:1;margin-bottom:4px}
+.bi-nm{font-size:10px;font-weight:800;color:#3a2a08}
+.bi-val{font-size:10px;color:#8a6a30;margin-top:2px}
+.bi-chk{position:absolute;top:3px;right:5px;font-size:16px}
+.bag-empty{grid-column:1/-1;text-align:center;padding:22px;color:#8a6a30;font-size:14px;font-weight:700}
+.bag-batch-bar{display:flex;gap:8px;margin-top:12px;background:rgba(200,80,80,.1);
+  border:1.5px solid var(--r);border-radius:12px;padding:10px}
+
+/* generic popup */
+.gplist{display:flex;flex-direction:column;gap:8px}
+.gpr{background:var(--p2);border:2px solid var(--bd2);border-radius:12px;
+  padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.gpr:active{background:var(--gl)}
+.gpr.dis{opacity:.4;pointer-events:none}
+
+/* wheel */
+#wov{align-items:center;z-index:800}
+#wov .obox{border-radius:20px;max-height:none;transform:scale(.8);padding:22px}
+#wov.open .obox{transform:scale(1)}
+.wheel{position:relative;width:210px;height:210px;margin:0 auto}
+#wctr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:64px;height:64px;background:var(--p);border:3px solid var(--bd);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:900;color:#3a2a08;z-index:2;pointer-events:none}
+.wb{position:absolute;width:58px;height:58px;border-radius:50%;border:none;
+  font-family:'Nunito',sans-serif;font-size:11px;font-weight:900;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:1px;color:white;box-shadow:0 3px 12px rgba(0,0,0,.5)}
+.wb:active{transform:scale(1.15)!important;filter:brightness(1.2)}
+.wb .wi{font-size:19px}
+
+/* common btns */
+.btn{border:none;border-radius:12px;padding:12px 14px;font-family:'Nunito',sans-serif;
+  font-size:14px;font-weight:900;cursor:pointer;transition:all .15s;width:100%;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.38;cursor:not-allowed}
+.btn-g{background:var(--g);color:white}.btn-y{background:var(--gold);color:#5a3000}
+.btn-r{background:var(--r);color:white}.btn-n{background:var(--p2);border:2px solid var(--bd2);color:#5a3a10}
+
+/* codex, ach, task */
+.trow{display:flex;align-items:center;gap:10px;padding:11px;background:var(--p2);
+  border-radius:12px;margin-bottom:8px;border:2px solid var(--bd2)}
+.trow.done{background:var(--gl);border-color:var(--g);opacity:.85}
+.ai{display:flex;align-items:center;gap:10px;padding:11px;background:var(--p2);
+  border-radius:12px;margin-bottom:8px;border:2px solid var(--bd2)}
+.ai.done{background:#fff8d8;border-color:var(--gold)}
+.cdx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.cdxe{background:var(--p2);border:2px solid var(--bd2);border-radius:10px;
+  padding:8px 4px;text-align:center;cursor:pointer}
+.cdxe:active{transform:scale(.95)}
+.rc-card{background:var(--p2);border:2px solid var(--bd2);border-radius:12px;padding:12px;margin-bottom:8px}
+.rc-ing{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.rc-tag{background:rgba(120,72,192,.14);border:1.5px solid rgba(120,72,192,.28);
+  border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;color:var(--pu)}
+
+/* float msg */
+.fm{position:fixed;pointer-events:none;z-index:900;
+  background:rgba(12,26,6,.95);color:#f0e8b0;padding:7px 14px;
+  border-radius:14px;font-size:13px;font-weight:800;
+  border:1px solid rgba(212,176,96,.35);white-space:nowrap;
+  animation:fUp 1.2s ease-out forwards;transform:translateX(-50%)}
+@keyframes fUp{0%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-40px)}}
+
+/* toast */
+#toast{position:fixed;bottom:68px;left:50%;transform:translateX(-50%);
+  background:rgba(4,14,2,.97);color:#f0e8b0;padding:10px 20px;
+  border-radius:16px;font-size:13px;font-weight:800;opacity:0;
+  pointer-events:none;transition:all .3s;z-index:999;white-space:nowrap;
+  border:1px solid rgba(212,176,96,.3)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+#at{position:fixed;top:10px;left:50%;transform:translateX(-50%);
+  background:#fff8d8;border:2px solid var(--gold);border-radius:14px;
+  padding:10px 18px;text-align:center;opacity:0;pointer-events:none;
+  transition:all .4s;z-index:999;box-shadow:0 4px 18px rgba(0,0,0,.3);white-space:nowrap}
+#at.show{opacity:1;transform:translateX(-50%) translateY(56px)}
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div id="root">
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <h1>🌿牧野<em>物語</em></h1>
+  <div class="stat">🪙<b id="sg">5000</b></div>
+  <div class="spacer"></div>
+  <button class="hbtn" onclick="openBag('all')" id="bag-btn">🎒<span id="bbadge" style="background:var(--r);color:white;border-radius:8px;padding:1px 6px;font-size:11px;margin-left:2px">0</span></button>
+  <button class="hbtn" onclick="showOv('task-ov')">📋</button>
+  <button class="hbtn" onclick="showOv('recipe-ov')">📜</button>
+  <button class="hbtn" onclick="showOv('ach-ov')">🏆</button>
+  <button class="hbtn gold" onclick="saveGame()">💾</button>
+</div>
+
+<!-- SCREENS CONTAINER -->
+<div id="screens">
+
+  <!-- ── OVERVIEW MAP ── -->
+  <div class="screen active" id="ov-screen">
+    <div class="ov-grid">
+
+      <!-- 農場 -->
+      <div class="ov-tile ov-farm" onclick="openZone('farm')">
+        <div class="ov-tile-top">
+          <div class="ov-tile-bg"></div>
+          <div class="ov-tile-ico">🌾</div>
+        </div>
+        <div class="ov-tile-bot">
+          <span class="ov-tile-name">🌱 農場</span>
+          <span class="ov-tile-hint" id="ov-farm-hint">點擊進入</span>
+        </div>
+      </div>
+
+      <!-- 牧場 -->
+      <div class="ov-tile ov-ranch" onclick="openZone('ranch')">
+        <div class="ov-tile-top">
+          <div class="ov-tile-bg"></div>
+          <div class="ov-tile-ico">🐑</div>
+        </div>
+        <div class="ov-tile-bot">
+          <span class="ov-tile-name">🏡 牧場</span>
+          <span class="ov-tile-hint" id="ov-ranch-hint">點擊進入</span>
+        </div>
+      </div>
+
+      <!-- 烹飪 -->
+      <div class="ov-tile ov-cook" onclick="openZone('cook')">
+        <div class="ov-tile-top">
+          <div class="ov-tile-bg"></div>
+          <div class="ov-tile-ico">🍳</div>
+        </div>
+        <div class="ov-tile-bot">
+          <span class="ov-tile-name">🍖 烹飪</span>
+          <span class="ov-tile-hint" id="ov-cook-hint">點擊進入</span>
+        </div>
+      </div>
+
+      <!-- 晶洞 -->
+      <div class="ov-tile ov-crystal" onclick="openZone('crystal')">
+        <div class="ov-tile-top">
+          <div class="ov-tile-bg"></div>
+          <div class="ov-tile-ico">💎</div>
+        </div>
+        <div class="ov-tile-bot">
+          <span class="ov-tile-name">💎 晶洞</span>
+          <span class="ov-tile-hint" id="ov-crystal-hint">點擊進入</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── ZONE DETAIL ── -->
+  <div class="screen" id="zone-screen">
+    <button id="zone-back" onclick="closeZone()">← 返回</button>
+    <div id="zone-header"><span id="zone-title">農場</span></div>
+
+    <!-- FARM -->
+    <div class="zone-content" id="zc-farm" style="display:none">
+      <div id="farm-zone">
+        <div class="farm-inner">
+          <div class="pot-grid c2" id="potgrid"></div>
+        </div>
+        <div class="farm-fence"></div>
+      </div>
+      <div class="area-tabs" id="ftabs"></div>
+    </div>
+
+    <!-- RANCH -->
+    <div class="zone-content" id="zc-ranch" style="display:none">
+      <div id="ranch-zone">
+        <canvas id="rcanvas"></canvas>
+        <div id="ral"></div>
+      </div>
+      <div class="area-tabs" id="rtabs"></div>
+    </div>
+
+    <!-- COOK -->
+    <div class="zone-content" id="zc-cook" style="display:none">
+      <div id="cook-zone">
+        <div class="cook-inner" id="cook-inner">
+          <div class="ck-slots-row">
+            <div class="ck-slot" id="cks0" onclick="ckSlotClick(0)">
+              <div class="ck-slot-ico" id="ckico0">＋</div>
+              <div class="ck-slot-nm" id="cknm0">食材 1</div>
+            </div>
+            <div class="ck-plus">＋</div>
+            <div class="ck-slot" id="cks1" onclick="ckSlotClick(1)">
+              <div class="ck-slot-ico" id="ckico1">＋</div>
+              <div class="ck-slot-nm" id="cknm1">食材 2（可選）</div>
+            </div>
+          </div>
+          <div class="ck-cs-row">
+            <div class="ck-cs" id="ck-cs" onclick="ckCsClick()">
+              <div style="font-size:20px">💠</div>
+              <div style="font-size:10px;font-weight:800;color:rgba(180,140,255,.8);margin-top:2px">晶石（可選）</div>
+            </div>
+            <div class="ck-res">
+              <div class="ck-fire">🔥</div>
+              <div class="ck-res-txt" id="ck-res-txt">選食材後顯示結果</div>
+            </div>
+          </div>
+          <button class="ck-gobtn" id="ck-gobtn" onclick="doCook()" disabled>🍳 開始烹飪</button>
+          <div class="ck-queue" id="ck-queue"></div>
+        </div>
+        <div class="blyr" id="blyr"></div>
+      </div>
+      <div class="area-tabs" id="ctabs"></div>
+    </div>
+
+    <!-- CRYSTAL -->
+    <div class="zone-content" id="zc-crystal" style="display:none">
+      <div id="crystal-zone">
+        <div class="cs-strs" id="cssl"></div>
+        <div class="cs-gnd"></div>
+        <div class="cs-stlcs" id="cstl"></div>
+        <div class="cs-ndlyr" id="csnl"></div>
+        <div class="csbat">🦇</div>
+      </div>
+      <div class="area-tabs" id="xtabs"></div>
+    </div>
+
+    <!-- BOTTOM ACTION BAR -->
+    <div id="zone-btm">
+      <div id="zbtm-farm" style="display:none;gap:5px;flex:1">
+        <button class="zb zb-g" id="btn-fexp" onclick="doFarmExpand()">🌾 擴張</button>
+      </div>
+      <div id="zbtm-ranch" style="display:none;gap:5px;flex:1">
+        <button class="zb zb-o" onclick="openBreedPick()">💕 繁育</button>
+        <button class="zb zb-n" onclick="openBuyPet()">🐾 購入</button>
+        <button class="zb zb-n" id="btn-rexp" onclick="doRanchExpand()">🏗 擴張</button>
+      </div>
+      <div id="zbtm-cook" style="display:none;gap:5px;flex:1">
+        <button class="zb zb-n" id="btn-cexp" onclick="doCookExpand()">🍳 加產線</button>
+      </div>
+      <div id="zbtm-crystal" style="display:none;gap:5px;flex:1">
+        <button class="zb zb-p" onclick="activateLight()" id="btnlt">✨ 光晶(0)</button>
+        <button class="zb zb-n" onclick="doXtalExpand()">🏗 擴張</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /screens -->
+
+<!-- OVERLAYS -->
+<div class="ov" id="bag-ov" onclick="if(event.target===this)hideOv('bag-ov')">
+  <div class="obox">
+    <div class="odrag"></div>
+    <button class="ocl" onclick="hideOv('bag-ov')">✕</button>
+    <h2 id="bag-title">🎒 背包</h2>
+    <div class="bag-tabs" id="bag-tabs"></div>
+    <div class="bag-grid" id="bag-grid"></div>
+    <div id="bag-batch-bar" style="display:none" class="bag-batch-bar">
+      <button class="btn btn-y" style="flex:1" onclick="batchSelectAll()">全選</button>
+      <button class="btn btn-r" style="flex:1" onclick="confirmBatch()">賣出（<span id="batch-cnt">0</span>件）</button>
+      <button class="btn btn-n" style="flex:none;padding:12px" onclick="cancelBatch()">✕</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="wov" onclick="if(event.target===this)hideOv('wov')">
+  <div class="obox">
+    <div class="odrag"></div>
+    <div class="wheel">
+      <div id="wctr">?</div>
+      <button class="wb" style="top:8px;left:50%;transform:translateX(-50%);background:#48a835" onclick="wa('feed')"><span class="wi">🍎</span>餵食</button>
+      <button class="wb" style="top:50%;right:4px;transform:translateY(-50%);background:#e08830" onclick="wa('breed')"><span class="wi">💕</span>繁育</button>
+      <button class="wb" style="bottom:8px;left:50%;transform:translateX(-50%);background:#7848c0" onclick="wa('pet')"><span class="wi">✨</span>撫摸</button>
+      <button class="wb" style="top:50%;left:4px;transform:translateY(-50%);background:#444" onclick="wa('trans')"><span class="wi">🔮</span>轉化</button>
+      <button class="wb" style="top:12%;right:8%;background:#cc4040" onclick="wa('bye')"><span class="wi">💫</span>告別</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="gpop" onclick="if(event.target===this)hideOv('gpop')">
+  <div class="obox">
+    <div class="odrag"></div>
+    <button class="ocl" onclick="hideOv('gpop')">✕</button>
+    <h2 id="gpt"></h2>
+    <div class="gplist" id="gpc"></div>
+  </div>
+</div>
+
+<div class="ov" id="task-ov" onclick="if(event.target===this)hideOv('task-ov')">
+  <div class="obox"><div class="odrag"></div>
+  <button class="ocl" onclick="hideOv('task-ov')">✕</button>
+  <h2>📋 每日任務</h2><div id="tlist"></div>
+  <button class="btn btn-y" id="bclaim" style="display:none;margin-top:10px" onclick="claimTasks()">🎁 領取獎勵！</button>
+  </div>
+</div>
+<div class="ov" id="recipe-ov" onclick="if(event.target===this)hideOv('recipe-ov')">
+  <div class="obox"><div class="odrag"></div>
+  <button class="ocl" onclick="hideOv('recipe-ov')">✕</button>
+  <h2>📜 食譜書</h2><div id="rclist"></div></div>
+</div>
+<div class="ov" id="ach-ov" onclick="if(event.target===this)hideOv('ach-ov')">
+  <div class="obox"><div class="odrag"></div>
+  <button class="ocl" onclick="hideOv('ach-ov')">✕</button>
+  <h2>🏆 成就</h2><div id="achlist"></div></div>
+</div>
+<div class="ov" id="cdx-ov" onclick="if(event.target===this)hideOv('cdx-ov')">
+  <div class="obox"><div class="odrag"></div>
+  <button class="ocl" onclick="hideOv('cdx-ov')">✕</button>
+  <h2>📖 圖鑑</h2>
+  <div id="cdxprog" style="font-size:12px;color:#8a6a30;margin-bottom:8px"></div>
+  <div class="cdx-grid" id="cdxgrid"></div></div>
+</div>
+
+<div id="at">
+  <span id="at-ico">🏆</span> <span id="at-nm" style="font-size:13px;font-weight:900;color:#3a2a08"></span>
+</div>
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// AUDIO
+// ══════════════════════════════════════════════════
+let _ac;
+function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;}
+function beep(f,d,t='sine',v=.12){
+  try{const o=getAC().createOscillator(),g=getAC().createGain();
+    o.connect(g);g.connect(getAC().destination);o.frequency.value=f;o.type=t;
+    g.gain.setValueAtTime(v,getAC().currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,getAC().currentTime+d);
+    o.start();o.stop(getAC().currentTime+d);}catch(e){}}
+const SFX={
+  plant:()=>{beep(440,.07);setTimeout(()=>beep(660,.09),75)},
+  harvest:()=>{[523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.08),i*65))},
+  cook:()=>{beep(330,.05);setTimeout(()=>beep(523,.09),60);setTimeout(()=>beep(660,.1),125)},
+  breed:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.09),i*75))},
+  buy:()=>{beep(392,.07);setTimeout(()=>beep(523,.1),85)},
+  dig:()=>{beep(200,.09,'square',.1)},
+  err:()=>{beep(200,.14,'sawtooth',.1)},
+  ach:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.1),i*75))},
+  pet:()=>{beep(880,.05);setTimeout(()=>beep(1100,.08),55)},
+  bye:()=>{[440,330,220].forEach((f,i)=>setTimeout(()=>beep(f,.1),i*100))},
+};
+document.addEventListener('touchstart',()=>{try{getAC().resume();}catch(e){}},{once:true});
+document.addEventListener('click',()=>{try{getAC().resume();}catch(e){}},{once:true});
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+const uid=()=>Date.now()+'_'+Math.floor(Math.random()*1e9);
+const $=id=>document.getElementById(id);
+const mk=(t,c)=>{const e=document.createElement(t);if(c)e.className=c;return e;};
+const ss=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+
+function fm(msg,x,y,col='#f0e8b0'){
+  const e=document.createElement('div');
+  e.className='fm';e.textContent=msg;
+  e.style.cssText=`left:${x}px;top:${y-14}px;color:${col}`;
+  document.body.appendChild(e);setTimeout(()=>e.remove(),1200);
+}
+function fmEl(msg,el,col){
+  if(!el)return;const r=el.getBoundingClientRect();
+  fm(msg,r.left+r.width/2,r.top+r.height*.3,col);
+}
+
+let _toastT=null;
+function toast(msg){const e=$('toast');if(!e)return;e.textContent=msg;e.classList.add('show');
+  if(_toastT)clearTimeout(_toastT);_toastT=setTimeout(()=>e.classList.remove('show'),2600);}
+
+// ══════════════════════════════════════════════════
+// GAME DATA
+// ══════════════════════════════════════════════════
+const ANIMALS={
+  sheep:   {n:'羊',t:'basic',p:80,r:0,cols:['white','brown','grey','black'],desc:'白色圓胖，最普通最可愛'},
+  rabbit:  {n:'兔',t:'basic',p:80,r:0,cols:['white','grey','brown'],desc:'耳朵超長的跳跳兔'},
+  pig:     {n:'豬',t:'basic',p:80,r:0,cols:['pink','brown','white'],desc:'鼻孔大愛睡覺的圓豬'},
+  chicken: {n:'雞',t:'basic',p:80,r:0,cols:['white','orange','brown'],desc:'每天咕咕叫的家雞'},
+  strawberry_sheep:{n:'草莓羊',t:'mutant',r:1,secret:true,cols:['pink'],desc:'草莓斑紋，頭頂有葉子',unlock:'蘋果烤肉餵羊→繁育'},
+  blueberry_rabbit:{n:'藍莓兔',t:'mutant',r:1,secret:true,cols:['purple'],desc:'深紫藍，耳朵有莓果紋',unlock:'莓果燒肉餵兔→繁育'},
+  caramel_pig:     {n:'焦糖豬',t:'mutant',r:1,secret:true,cols:['orange'],desc:'金棕焦糖色，流淌紋',unlock:'蜜瓜豬排餵豬→繁育'},
+  chili_chicken:   {n:'辣椒雞',t:'mutant',r:1,secret:true,cols:['red'],desc:'全紅，超大紅冠如火焰',unlock:'辣烤雞腿餵雞→繁育'},
+  star_sheep:      {n:'星光羊',t:'mutant',r:2,secret:true,cols:['navy'],desc:'深藍底＋金色星星，月牙角',unlock:'星燦肉餵草莓羊→繁育'},
+  moon_rabbit:     {n:'月兔',t:'mutant',r:2,secret:true,cols:['silver'],desc:'銀白色，耳月牙紋，眼睛紅',unlock:'星燦肉餵藍莓兔→繁育'},
+  smoky_pig:       {n:'煙燻豬',t:'mutant',r:1,secret:true,cols:['darkgrey'],desc:'深灰色，鼻子冒煙',unlock:'燒烤拼盤餵豬→繁育'},
+  golden_chicken:  {n:'金雞',t:'mutant',r:2,secret:true,cols:['gold'],desc:'全身金色，冠是皇冠，尾羽展',unlock:'星燦肉餵辣椒雞→繁育'},
+  rainbow_sheep:   {n:'彩虹羊',t:'rare',r:3,secret:true,cols:['rainbow'],desc:'七彩條紋，毛是彩色棉花糖',unlock:'星光羊×月兔多代繁育'},
+  ghost_pig:       {n:'幽靈豬',t:'rare',r:3,secret:true,cols:['ghost'],desc:'半透明藍白色，眼睛發光',unlock:'煙燻豬×金雞＋光晶'},
+  divine_dragon:   {n:'神獸龍',t:'legend',r:4,secret:true,cols:['dragon'],desc:'鱗片金紫，四翼長角，龍鬚飄',unlock:'彩虹羊×幽靈豬＋傳說盛宴'},
+};
+const PLANTS={
+  apple:    {n:'蘋果',e:'🍎',col:'#e03030',grow:60,sell:8,yld:3,p:40},
+  berry:    {n:'莓果',e:'🫐',col:'#6030c0',grow:45,sell:5,yld:5,p:40},
+  melon:    {n:'哈密瓜',e:'🍈',col:'#78c038',grow:120,sell:20,yld:1,p:100},
+  grape:    {n:'葡萄',e:'🍇',col:'#7820b8',grow:90,sell:10,yld:4,p:80},
+  starfruit:{n:'星果',e:'⭐',col:'#f0b820',grow:180,sell:35,yld:2,p:200},
+  carrot:   {n:'紅蘿蔔',e:'🥕',col:'#e05010',grow:50,sell:6,yld:4,p:35},
+  mushroom: {n:'蘑菇',e:'🍄',col:'#9a3818',grow:80,sell:12,yld:2,p:60},
+  chili:    {n:'辣椒',e:'🌶',col:'#dc1818',grow:100,sell:15,yld:3,p:80},
+};
+const RECIPES=[
+  {id:'ra',ing:['apple'],out:'baked_apple',t:8},
+  {id:'rb',ing:['berry'],out:'berry_jam',t:8},
+  {id:'rm',ing:['melon'],out:'melon_juice',t:12},
+  {id:'rs',ing:['starfruit'],out:'star_jelly',t:15},
+  {id:'rc',ing:['carrot'],out:'roast_carrot',t:6},
+  {id:'rmu',ing:['mushroom'],out:'mushroom_soup',t:10},
+  {id:'rch',ing:['chili'],out:'chili_sauce',t:10},
+  {id:'rmt',ing:['meat'],out:'roast_meat',t:12},
+  {id:'ram',ing:['baked_apple','roast_meat'],out:'apple_bbq',t:20},
+  {id:'rbm',ing:['berry_jam','roast_meat'],out:'berry_bbq',t:20},
+  {id:'rmp',ing:['melon_juice','meat'],out:'melon_pork',t:22},
+  {id:'rsm',ing:['star_jelly','roast_meat'],out:'star_bbq',t:30},
+  {id:'rcl',ing:['chili_sauce','roast_meat'],out:'spicy_leg',t:22},
+  {id:'rpp',ing:['roast_meat','roast_meat'],out:'bbq_platter',t:25},
+  {id:'rleg',ing:['star_bbq','apple_bbq'],out:'legend_feast',t:60},
+];
+const EMOJI={
+  apple:'🍎',berry:'🫐',melon:'🍈',grape:'🍇',starfruit:'⭐',carrot:'🥕',mushroom:'🍄',chili:'🌶',meat:'🥩',
+  baked_apple:'🍎',berry_jam:'🍓',melon_juice:'🥤',star_jelly:'⭐',roast_carrot:'🥕',
+  mushroom_soup:'🍲',chili_sauce:'🌶',roast_meat:'🥩',
+  apple_bbq:'🍢',berry_bbq:'🍖',melon_pork:'🥩',star_bbq:'✨',
+  spicy_leg:'🍗',bbq_platter:'🍽️',legend_feast:'🌈',stew:'🥣',
+};
+const PRODS={
+  baked_apple:{n:'烤蘋果',col:'#e03030',sell:18,mB:20,cat:'food'},
+  berry_jam:{n:'莓果醬',col:'#6030c0',sell:15,mB:15,cat:'food',mutB:{rabbit:.05}},
+  melon_juice:{n:'蜜瓜汁',col:'#78c038',sell:45,mB:30,cat:'food'},
+  star_jelly:{n:'星果凍',col:'#f0b820',sell:80,mB:40,cat:'food',mutB:{all:.1}},
+  roast_carrot:{n:'烤蘿蔔',col:'#e05010',sell:14,mB:18,cat:'food'},
+  mushroom_soup:{n:'蘑菇湯',col:'#9a3818',sell:28,mB:25,cat:'food'},
+  chili_sauce:{n:'辣醬',col:'#dc1818',sell:32,mB:10,cat:'food',mutB:{chicken:.08}},
+  roast_meat:{n:'烤肉',col:'#a03018',sell:90,mB:35,cat:'food'},
+  apple_bbq:{n:'蘋果烤肉串',col:'#e04030',sell:150,mB:45,cat:'special',mutKey:'strawberry_sheep',feedSp:'sheep'},
+  berry_bbq:{n:'莓果燒肉',col:'#6028b0',sell:140,mB:40,cat:'special',mutKey:'blueberry_rabbit',feedSp:'rabbit'},
+  melon_pork:{n:'蜜瓜豬排',col:'#60a028',sell:160,mB:50,cat:'special',mutKey:'caramel_pig',feedSp:'pig'},
+  star_bbq:{n:'星燦肉',col:'#b89818',sell:280,mB:60,cat:'special',mutB:{all:.2},feedSp:'all'},
+  spicy_leg:{n:'辣烤雞腿',col:'#cc2818',sell:180,mB:40,cat:'special',mutKey:'chili_chicken',feedSp:'chicken'},
+  bbq_platter:{n:'燒烤拼盤',col:'#883018',sell:200,mB:50,cat:'special',mutKey:'smoky_pig',feedSp:'pig'},
+  legend_feast:{n:'傳說盛宴',col:'#9018c0',sell:999,mB:100,cat:'legend',mutB:{all:.5},feedSp:'all'},
+  stew:{n:'隨意燉',col:'#786858',sell:30,mB:20,cat:'food'},
+};
+const CRYSTALS={
+  fire:{n:'火晶',e:'🔥',col:'#ff6020',eff:'烹飪售價+30%'},
+  dew:{n:'露晶',e:'💧',col:'#40a0ff',eff:'烹飪時間-40%'},
+  light:{n:'光晶',e:'✨',col:'#f0e040',eff:'突變率×5'},
+};
+const RAR_N=['普通','稀有','史詩','傳說','究極'];
+const RAR_C=['#88aa66','#5588cc','#9955dd','#dd9930','#ff4444'];
+
+// ══════════════════════════════════════════════════
+// PET PALETTE & DRAWING
+// ══════════════════════════════════════════════════
+const PAL={
+  white:{b:'#f2eeea',s:'#d8d0c8',sk:'#f0dcc8',n:'#e8a090',h:'#806858',in:'#ffb8b8',e:'#222'},
+  brown:{b:'#c8904a',s:'#a87030',sk:'#d8b080',n:'#a07050',h:'#604020',in:'#f0a880',e:'#222'},
+  grey:{b:'#aaaaaa',s:'#888888',sk:'#c8b8a8',n:'#c09898',h:'#505050',in:'#ffb8b8',e:'#222'},
+  black:{b:'#3c3c3c',s:'#242424',sk:'#4a3c2c',n:'#583030',h:'#181818',in:'#804040',e:'#aaa'},
+  pink:{b:'#f0a8c0',s:'#d878a0',sk:'#fcc8d8',n:'#e86090',h:'#804858',in:'#ffe0ec',e:'#222'},
+  orange:{b:'#e89050',s:'#c86828',sk:'#f8c080',n:'#d07050',h:'#703820',in:'#ffd0a0',e:'#222'},
+  red:{b:'#d84040',s:'#a02020',sk:'#e88080',n:'#902020',h:'#601010',in:'#ffc0c0',e:'#fff'},
+  purple:{b:'#8848c8',s:'#6030a0',sk:'#b888e8',n:'#684898',h:'#381870',in:'#e0c0ff',e:'#ffe'},
+  navy:{b:'#283888',s:'#181e58',sk:'#3848b0',n:'#182870',h:'#0c1440',in:'#a0b0ff',e:'#ffe080'},
+  silver:{b:'#c8d8e8',s:'#a0b0c0',sk:'#d8e8f8',n:'#a0b0c8',h:'#607080',in:'#e0f0ff',e:'#cc0000'},
+  gold:{b:'#d8a820',s:'#a87800',sk:'#f0d060',n:'#906030',h:'#604000',in:'#ffe880',e:'#222'},
+  darkgrey:{b:'#484848',s:'#303030',sk:'#585858',n:'#403030',h:'#202020',in:'#686868',e:'#aaa'},
+  rainbow:{b:'#f0a0a0',s:'#c07080',sk:'#ffd0a0',n:'#e09090',h:'#806060',in:'#ffe0e0',e:'#f0c020'},
+  ghost:{b:'rgba(200,220,255,.6)',s:'rgba(160,180,230,.45)',sk:'rgba(220,240,255,.65)',n:'rgba(160,180,220,.55)',h:'rgba(120,140,180,.45)',in:'rgba(240,250,255,.75)',e:'#80ffff'},
+  dragon:{b:'#8838a8',s:'#582078',sk:'#a850c8',n:'#582878',h:'#281448',in:'#d0a0ff',e:'#ffee00'},
+};
+const getP=col=>PAL[col]||PAL.white;
+
+// ══════════════════════════════════════════════════
+// DRAWING HELPERS
+// ══════════════════════════════════════════════════
+const Ec=(ctx,cx,cy,rx,ry)=>{ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.fill();};
+const EcS=(ctx,cx,cy,rx,ry)=>{ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);ctx.stroke();};
+const Rc=(ctx,x,y,w,h,r=4)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();};
+const Tc=(ctx,x1,y1,x2,y2,x3,y3)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineTo(x3,y3);ctx.closePath();ctx.fill();};
+const px=(v,p)=>Math.round(v*p); // pixel-snap helper
+
+// Draw pixel-art star
+const STAR=(ctx,cx,cy,r,col='#ffe030')=>{ctx.fillStyle=col;ctx.beginPath();for(let i=0;i<5;i++){const a=i*Math.PI*2/5-Math.PI/2,b=a+Math.PI/5;ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.lineTo(cx+r*.42*Math.cos(b),cy+r*.42*Math.sin(b));}ctx.closePath();ctx.fill();};
+
+// Shared eye drawing
+function drawEyes(ctx,hcx,hcy,s,eyeClose,eyeCol,state,frame,sp){
+  const ex1=hcx-s*.9,ex2=hcx+s*.9,ey=hcy+s*.1;
+  if(eyeClose){
+    ctx.strokeStyle='rgba(40,20,10,.85)';ctx.lineWidth=Math.max(1,s*.28);ctx.lineCap='round';
+    ctx.beginPath();ctx.arc(ex1,ey+s*.1,s*.5,Math.PI,0);ctx.stroke();
+    ctx.beginPath();ctx.arc(ex2,ey+s*.1,s*.5,Math.PI,0);ctx.stroke();
+    // sleep zzz
+    ctx.font=`bold ${Math.round(s*1.2)}px sans-serif`;ctx.fillStyle='#7070cc';
+    ctx.globalAlpha=.75+Math.sin(frame*.08)*.25;
+    ctx.fillText('z',hcx+s*1.8,hcy-s*2.2);
+    ctx.font=`bold ${Math.round(s*.85)}px sans-serif`;ctx.fillText('z',hcx+s*2.6,hcy-s*3);
+    ctx.globalAlpha=1;
+    return;
+  }
+  // whites
+  ctx.fillStyle='white';
+  Ec(ctx,ex1,ey,s*.75,s*.85);Ec(ctx,ex2,ey,s*.75,s*.85);
+  // iris
+  const iCol=eyeCol==='special'?(sp==='ghost_pig'?'#60b8ff':sp==='divine_dragon'?'#f0d820':'#222'):eyeCol;
+  ctx.fillStyle=iCol;
+  Ec(ctx,ex1,ey+s*.1,s*.52,s*.62);Ec(ctx,ex2,ey+s*.1,s*.52,s*.62);
+  // pupils
+  ctx.fillStyle='rgba(10,5,0,.9)';
+  Ec(ctx,ex1,ey+s*.18,s*.3,s*.38);Ec(ctx,ex2,ey+s*.18,s*.3,s*.38);
+  // shine
+  ctx.fillStyle='rgba(255,255,255,.92)';
+  Ec(ctx,ex1-s*.18,ey-s*.08,s*.14,s*.14);Ec(ctx,ex2-s*.18,ey-s*.08,s*.14,s*.14);
+  // glow eyes (ghost/dragon)
+  if(eyeCol==='special'){
+    ctx.globalAlpha=.35;
+    ctx.fillStyle=sp==='ghost_pig'?'#80d8ff':'#fff080';
+    Ec(ctx,ex1,ey,s*1.1,s*1.2);Ec(ctx,ex2,ey,s*1.1,s*1.2);
+    ctx.globalAlpha=1;
+  }
+  // happy sparkles
+  if(state==='happy'){STAR(ctx,hcx-s*2.8,hcy-s*2,s*.6);STAR(ctx,hcx+s*2.8,hcy-s*2,s*.55);}
+}
+
+// Shared cheek blush
+function drawCheeks(ctx,hcx,hcy,s){
+  ctx.save();ctx.globalAlpha=.2;ctx.fillStyle='#ff5566';
+  Ec(ctx,hcx-s*1.6,hcy+s*.8,s*1.05,s*.6);
+  Ec(ctx,hcx+s*1.6,hcy+s*.8,s*1.05,s*.6);
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+// DRAW PET — silhouette-first, big head, pixel art
+//
+// Design rules:
+//  • Each species has UNIQUE OUTLINE — recognisable without colour
+//  • Head ≈ same size as body (big-head style, like ref img 2)
+//  • Short stubby legs, centred under body
+//  • Species-defining features are exaggerated:
+//    sheep  → fluffy wool crown + small round ears
+//    rabbit → two very tall upright ears (tallest silhouette)
+//    pig    → giant flat disc snout, curly tail
+//    chicken→ wing spread silhouette + big comb on top
+// ══════════════════════════════════════════════════
+function drawPet(cv,genes,state,frame,faceL,sz){
+  sz=sz||44;
+  // canvas: square-ish, leave room for ears/comb above
+  const W=Math.round(sz*2.2),H=Math.round(sz*2.6);
+  if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=false;
+  ctx.clearRect(0,0,W,H);
+
+  const P=getP(genes.color||'white');
+  const sp=genes.species||'sheep';
+  const isSheep=sp.includes('sheep');
+  const isRabbit=sp.includes('rabbit');
+  const isPig=sp.includes('pig');
+  const isChicken=sp.includes('chicken');
+  const isDragon=sp==='divine_dragon';
+
+  // ── animation offsets ──
+  let bodyDy=0,lph=0,eyeClose=false,heartShow=false,bounce=0;
+  if(state==='walk'){bounce=Math.abs(Math.sin(frame*.16))*sz*.06;lph=frame*.22;}
+  if(state==='sleep'){eyeClose=true;bodyDy=sz*.05;}
+  if(state==='happy'){bounce=Math.abs(Math.sin(frame*.22))*sz*.1;}
+  if(state==='breed'){heartShow=true;}
+
+  ctx.save();
+  if(faceL){ctx.translate(W,0);ctx.scale(-1,1);}
+
+  // ── shared layout: CENTRED, front-facing ──
+  const cx=W*.5;
+  const bBot=H*.9+bodyDy-bounce;
+  const bRx=sz*.75,bRy=sz*.5;
+  const bCy=bBot-bRy;
+  const hR=sz*.6;
+  // HEAD centred above body (正面朝向)
+  const hcx=cx;
+  const hcy=bCy-bRy*.35-hR*.9;
+  const s=sz*.12;
+
+  // ══════════════════════════════
+  // ── SHEEP — 設計圖版本 ──
+  // 厚毛絨框住臉：毛球從兩側和頭頂包圍圓臉
+  // 臉在中央，兩個小角從毛頂冒出
+  // ══════════════════════════════
+  if(isSheep){
+    // 小尾巴(後方小毛球)
+    ctx.fillStyle=P.s;Ec(ctx,cx-bRx*.9,bCy,s*1.1,s*1.0);
+    ctx.fillStyle=P.b;Ec(ctx,cx-bRx*.9,bCy,s*.72,s*.65);
+
+    // 4條短腿
+    const legXs=[cx-s*2.2,cx-s*.72,cx+s*.72,cx+s*2.2];
+    legXs.forEach((lx,i)=>{
+      const ldy=state==='walk'?Math.sin(lph+(i%2===0?0:Math.PI))*s*.5:0;
+      ctx.fillStyle=P.h;Ec(ctx,lx,bBot+ldy,s*.9,s*1.05);
+      ctx.fillStyle=P.s;Ec(ctx,lx,bBot-s*.3+ldy,s*.82,s*.48);
+    });
+
+    // 毛絨身體(多個疊起的圓球)
+    const bPuffs=[
+      [cx-bRx*.62,bCy+bRy*.05,s*2.1,s*1.7],
+      [cx-bRx*.15,bCy-bRy*.55,s*2.4,s*1.9],
+      [cx+bRx*.35,bCy-bRy*.4,s*2.2,s*1.8],
+      [cx+bRx*.7,bCy+bRy*.1,s*1.7,s*1.4],
+      [cx-bRx*.3,bCy+bRy*.28,s*2.6,s*1.5],
+      [cx+bRx*.25,bCy+bRy*.3,s*2.3,s*1.4],
+    ];
+    ctx.fillStyle=P.s;bPuffs.forEach(([x,y,rx,ry])=>Ec(ctx,x,y,rx,ry));
+    ctx.fillStyle=P.b;bPuffs.forEach(([x,y,rx,ry])=>Ec(ctx,x,y,rx*.83,ry*.83));
+
+    // RAINBOW條紋
+    if(sp==='rainbow_sheep'){ctx.save();ctx.globalAlpha=.38;['#ff4444','#ff9900','#ffe020','#44cc44','#4488ff','#cc44ff'].forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect(cx-bRx+i*bRx*.35,bCy-bRy*.7,bRx*.3,bRy*1.7);});ctx.restore();}
+    if(sp==='star_sheep'){ctx.globalAlpha=.65;[{x:-.45,y:.05},{x:.42,y:-.28},{x:0,y:.55},{x:.75,y:.28}].forEach(pt=>STAR(ctx,cx+pt.x*bRx,bCy+pt.y*bRy,s*.58,'#f0e030'));ctx.globalAlpha=1;}
+
+    // ── 臉被厚毛圈住 ──
+    // 先畫毛絨環繞(左右兩大團+頭頂三團)
+    // 頭頂毛
+    ctx.fillStyle=P.s;
+    Ec(ctx,hcx-s*1.8,hcy-hR*.4,s*1.85,s*1.6);
+    Ec(ctx,hcx,hcy-hR*.85,s*2.0,s*1.5);
+    Ec(ctx,hcx+s*1.8,hcy-hR*.4,s*1.85,s*1.6);
+    // 兩側毛
+    Ec(ctx,hcx-hR*.95,hcy+s*.1,s*1.5,s*2.0);
+    Ec(ctx,hcx+hR*.95,hcy+s*.1,s*1.5,s*2.0);
+    ctx.fillStyle=P.b;
+    Ec(ctx,hcx-s*1.7,hcy-hR*.42,s*1.45,s*1.25);
+    Ec(ctx,hcx,hcy-hR*.88,s*1.55,s*1.18);
+    Ec(ctx,hcx+s*1.7,hcy-hR*.42,s*1.45,s*1.25);
+    Ec(ctx,hcx-hR*.95,hcy+s*.12,s*1.15,s*1.55);
+    Ec(ctx,hcx+hR*.95,hcy+s*.12,s*1.15,s*1.55);
+
+    // 小角(從頭頂毛冒出)
+    if(sp!=='strawberry_sheep'&&sp!=='rainbow_sheep'){
+      ctx.fillStyle=P.h;
+      // 左角
+      ctx.beginPath();ctx.moveTo(hcx-s*1.4,hcy-hR*.7);ctx.bezierCurveTo(hcx-s*2.0,hcy-hR-sz*.28,hcx-s*.8,hcy-hR-sz*.22,hcx-s*.6,hcy-hR*.72);ctx.fill();
+      // 右角
+      ctx.beginPath();ctx.moveTo(hcx+s*1.4,hcy-hR*.7);ctx.bezierCurveTo(hcx+s*2.0,hcy-hR-sz*.28,hcx+s*.8,hcy-hR-sz*.22,hcx+s*.6,hcy-hR*.72);ctx.fill();
+    }
+
+    // STRAWBERRY葉子
+    if(sp==='strawberry_sheep'){
+      ctx.fillStyle='#2a9a18';
+      Tc(ctx,hcx,hcy-hR-s*.2,hcx-s*1.4,hcy-hR-s*2.5,hcx+s*.2,hcy-hR-s*.4);
+      Tc(ctx,hcx,hcy-hR-s*.2,hcx+s*1.5,hcy-hR-s*2.6,hcx-s*.2,hcy-hR-s*.4);
+      Tc(ctx,hcx-s*.3,hcy-hR-s*.1,hcx,hcy-hR-s*2.0,hcx-s*1.8,hcy-hR-s*1.2);
+      ctx.fillStyle='#42bb28';Ec(ctx,hcx,hcy-hR-s*.3,s*.45,s*.42);}
+
+    // STAR月牙角
+    if(sp==='star_sheep'){
+      ctx.strokeStyle='#f0e030';ctx.lineWidth=s*.42;ctx.lineCap='round';
+      ctx.beginPath();ctx.arc(hcx-s*1.2,hcy-hR-s*.3,s*.95,2.8,1.2,false);ctx.stroke();
+      ctx.beginPath();ctx.arc(hcx+s*1.2,hcy-hR-s*.3,s*.95,1.9,-.4,false);ctx.stroke();}
+
+    // RAINBOW 彩虹雲耳
+    if(sp==='rainbow_sheep'){
+      ctx.fillStyle='rgba(255,255,255,.78)';
+      Ec(ctx,hcx-hR*1.0,hcy-s*.5,s*1.1,s*.85);Ec(ctx,hcx-hR*.6,hcy-s*1.2,s*.85,s*.7);
+      Ec(ctx,hcx+hR*.6,hcy-s*1.2,s*.85,s*.7);Ec(ctx,hcx+hR*1.0,hcy-s*.5,s*1.1,s*.85);}
+
+    // 臉
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR*.82,hR*.8);
+
+    // 小鼻
+    ctx.fillStyle=P.n;Ec(ctx,hcx,hcy+hR*.3,s*.6,s*.4);
+    ctx.fillStyle=P.h;Ec(ctx,hcx-s*.22,hcy+hR*.3,s*.18,s*.16);Ec(ctx,hcx+s*.22,hcy+hR*.3,s*.18,s*.16);
+    // 嘴巴
+    ctx.strokeStyle=P.h;ctx.lineWidth=Math.max(1,s*.26);ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(hcx-s*.25,hcy+hR*.48);ctx.quadraticCurveTo(hcx,hcy+hR*.62,hcx+s*.25,hcy+hR*.48);ctx.stroke();
+  }
+
+  // ══════════════════════════════
+  // ── RABBIT ── 正面，對齊設計圖
+  // ══════════════════════════════
+  else if(isRabbit){
+    // 超長立耳 — 兩根對稱居中
+    const earW=s*1.2,earH=sz*.92;
+    const earLx=cx-s*1.55,earRx=cx+s*1.55;
+    const earTopY=hcy-hR-earH+s*.5;
+    ctx.fillStyle=P.b;
+    Rc(ctx,earLx-earW*.5,earTopY,earW,earH,earW*.5);
+    Rc(ctx,earRx-earW*.5,earTopY,earW,earH,earW*.5);
+    ctx.fillStyle=P.in;ctx.globalAlpha=.52;
+    Rc(ctx,earLx-earW*.28,earTopY+s*.7,earW*.56,earH*.72,earW*.28);
+    Rc(ctx,earRx-earW*.28,earTopY+s*.7,earW*.56,earH*.72,earW*.28);
+    ctx.globalAlpha=1;
+    if(sp==='blueberry_rabbit'){ctx.fillStyle='#8020e0';ctx.globalAlpha=.52;Ec(ctx,earLx,earTopY+earH*.3,s*.36,s*.36);Ec(ctx,earLx,earTopY+earH*.56,s*.3,s*.3);Ec(ctx,earRx,earTopY+earH*.3,s*.36,s*.36);Ec(ctx,earRx,earTopY+earH*.56,s*.3,s*.3);ctx.globalAlpha=1;}
+    if(sp==='moon_rabbit'){ctx.strokeStyle='rgba(200,215,255,.82)';ctx.lineWidth=s*.28;ctx.lineCap='round';[earLx,earRx].forEach(ex=>{ctx.beginPath();ctx.arc(ex,earTopY+earH*.38,s*.48,-.4,Math.PI+.4);ctx.stroke();});}
+
+    // 身體
+    ctx.fillStyle=P.s;Ec(ctx,cx,bCy+bRy*.12,bRx*.9,bRy*.84);
+    ctx.fillStyle=P.b;Ec(ctx,cx,bCy,bRx*.94,bRy*.9);
+    ctx.fillStyle=P.sk;ctx.globalAlpha=.4;Ec(ctx,cx,bCy+bRy*.28,bRx*.5,bRy*.5);ctx.globalAlpha=1;
+
+    // 小尾巴
+    ctx.fillStyle=P.b;Ec(ctx,cx-bRx*.9,bCy+bRy*.32,s*1.3,s*1.2);
+    ctx.fillStyle='rgba(255,255,255,.58)';Ec(ctx,cx-bRx*.9,bCy+bRy*.32,s*.85,s*.8);
+
+    // 腳(正面：左右對稱)
+    ctx.fillStyle=P.h;
+    Ec(ctx,cx-s*1.75,bBot+(state==='walk'?Math.sin(lph)*s*.48:0),s*1.35,s*.88);
+    Ec(ctx,cx+s*1.75,bBot+(state==='walk'?Math.sin(lph+Math.PI)*s*.48:0),s*1.35,s*.88);
+    ctx.fillStyle=P.s;
+    Ec(ctx,cx-s*1.35,bCy+bRy*.62,s*.85,s*.68);
+    Ec(ctx,cx+s*1.35,bCy+bRy*.62,s*.85,s*.68);
+
+    // 臉
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR,hR*.94);
+
+    // 鼻子
+    ctx.fillStyle='#e08090';Ec(ctx,hcx,hcy+hR*.32,s*.42,s*.3);
+    // 鬍鬚
+    ctx.strokeStyle='rgba(80,50,30,.38)';ctx.lineWidth=Math.max(1,s*.16);ctx.lineCap='round';
+    [-1,0,1].forEach(i=>{
+      ctx.beginPath();ctx.moveTo(hcx-s*.48,hcy+hR*.3+i*s*.26);ctx.lineTo(hcx-s*2.1,hcy+hR*.18+i*s*.32);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(hcx+s*.48,hcy+hR*.3+i*s*.26);ctx.lineTo(hcx+s*2.1,hcy+hR*.18+i*s*.32);ctx.stroke();
+    });
+  }
+
+  // ══════════════════════════════
+  // ── PIG ── 正面，對齊設計圖
+  // ══════════════════════════════
+  else if(isPig){
+    // 捲尾巴
+    ctx.strokeStyle=P.b;ctx.lineWidth=Math.max(2,s*.52);ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(cx-bRx*.85,bCy-bRy*.08);
+    ctx.bezierCurveTo(cx-bRx*1.28,bCy-bRy*.55,cx-bRx*1.12,bCy-bRy*1.05,cx-bRx*.72,bCy-bRy*.68);
+    ctx.stroke();
+
+    // 寬圓身體
+    ctx.fillStyle=P.s;Ec(ctx,cx,bCy+bRy*.12,bRx,bRy*.92);
+    ctx.fillStyle=P.b;Ec(ctx,cx,bCy,bRx*1.1,bRy*.9);
+    ctx.fillStyle=P.sk;ctx.globalAlpha=.28;Ec(ctx,cx,bCy+bRy*.32,bRx*.52,bRy*.5);ctx.globalAlpha=1;
+    if(sp==='smoky_pig'){ctx.fillStyle='#383848';ctx.globalAlpha=.22;Ec(ctx,cx,bCy-bRy*.48,s*2,s*1.5);Ec(ctx,cx+s*1.1,bCy-bRy*.88,s*1.4,s*1.1);Ec(ctx,cx-s*.9,bCy-bRy*.82,s*1.2,s*1.0);ctx.globalAlpha=1;}
+    if(sp==='ghost_pig'){ctx.fillStyle='#80c8ff';ctx.globalAlpha=.26;Ec(ctx,cx,bCy,bRx*1.12,bRy*.92);ctx.globalAlpha=1;}
+
+    // 4條短腿
+    const lgXs=[cx-s*2.5,cx-s*.82,cx+s*.82,cx+s*2.5];
+    lgXs.forEach((lx,i)=>{
+      const ldy=state==='walk'?Math.sin(lph+(i%2===0?0:Math.PI))*s*.5:0;
+      ctx.fillStyle=P.h;Ec(ctx,lx,bBot+ldy,s*.92,s*1.08);
+      ctx.fillStyle=P.s;Ec(ctx,lx,bBot-s*.33+ldy,s*.82,s*.52);
+    });
+
+    // 圓耳(頭頂兩側)
+    ctx.fillStyle=P.b;
+    Ec(ctx,hcx-hR*.82,hcy-hR*.72,s*1.18,s*1.32);
+    Ec(ctx,hcx+hR*.82,hcy-hR*.72,s*1.18,s*1.32);
+    ctx.fillStyle=P.in;ctx.globalAlpha=.52;
+    Ec(ctx,hcx-hR*.82,hcy-hR*.7,s*.65,s*.76);
+    Ec(ctx,hcx+hR*.82,hcy-hR*.7,s*.65,s*.76);
+    ctx.globalAlpha=1;
+
+    // 臉
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR*.96,hR*.92);
+
+    // 大圓盤鼻子(豬的標誌)
+    const snCx=hcx,snCy=hcy+hR*.44,snRx=s*1.58,snRy=s*1.2;
+    ctx.fillStyle=P.n;Ec(ctx,snCx,snCy,snRx,snRy);
+    ctx.fillStyle='rgba(40,15,8,.58)';
+    Ec(ctx,snCx-snRx*.38,snCy,s*.3,s*.28);
+    Ec(ctx,snCx+snRx*.38,snCy,s*.3,s*.28);
+    ctx.strokeStyle=P.h;ctx.lineWidth=Math.max(1,s*.2);EcS(ctx,snCx,snCy,snRx,snRy);
+  }
+
+  // ══════════════════════════════
+  // ── CHICKEN ── 正面，對齊設計圖
+  // ══════════════════════════════
+  else if(isChicken){
+    const combCol=sp==='golden_chicken'?'#f0c020':'#e03030';
+    const wattleCol=sp==='golden_chicken'?'#d0a010':'#cc2020';
+
+    // 翅膀展開(左右對稱)
+    ctx.fillStyle=P.b;ctx.globalAlpha=.88;
+    ctx.beginPath();
+    ctx.moveTo(cx-bRx*.68,bCy-bRy*.1);
+    ctx.bezierCurveTo(cx-bRx*1.6,bCy-bRy*.5,cx-bRx*1.72,bCy+bRy*.38,cx-bRx*.88,bCy+bRy*.72);
+    ctx.bezierCurveTo(cx-bRx*.5,bCy+bRy*.9,cx-bRx*.18,bCy+bRy*.55,cx-bRx*.68,bCy-bRy*.1);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx+bRx*.68,bCy-bRy*.1);
+    ctx.bezierCurveTo(cx+bRx*1.6,bCy-bRy*.5,cx+bRx*1.72,bCy+bRy*.38,cx+bRx*.88,bCy+bRy*.72);
+    ctx.bezierCurveTo(cx+bRx*.5,bCy+bRy*.9,cx+bRx*.18,bCy+bRy*.55,cx+bRx*.68,bCy-bRy*.1);
+    ctx.fill();
+    ctx.globalAlpha=1;
+
+    // 身體
+    ctx.fillStyle=P.s;Ec(ctx,cx,bCy+bRy*.12,bRx*.8,bRy*.86);
+    ctx.fillStyle=P.b;Ec(ctx,cx,bCy,bRx*.84,bRy*.82);
+    if(sp==='chili_chicken'){ctx.fillStyle='#ff5808';ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(cx,bCy-bRy*.5);ctx.bezierCurveTo(cx+bRx*.8,bCy-bRy*1.3,cx+bRx*1.35,bCy-bRy*.1,cx+bRx*.55,bCy+bRy*.45);ctx.bezierCurveTo(cx+bRx*.2,bCy+bRy*.7,cx-bRx*.05,bCy+bRy*.3,cx,bCy-bRy*.5);ctx.fill();ctx.globalAlpha=1;}
+
+    // 細腿
+    ctx.fillStyle=P.h;
+    const clLx=cx-s*1.15,clRx=cx+s*1.15;
+    const ldyC=state==='walk'?Math.sin(lph)*s*.52:0;
+    Rc(ctx,clLx-s*.28,bCy+bRy*.72+ldyC,s*.56,s*1.55,s*.18);
+    Rc(ctx,clRx-s*.28,bCy+bRy*.72-ldyC,s*.56,s*1.55,s*.18);
+    ctx.fillStyle='#b88818';
+    [-1,0,1].forEach(o=>{
+      Rc(ctx,clLx+o*s*.48-s*.11,bBot+ldyC,s*.22,s*.52,s*.08);
+      Rc(ctx,clRx+o*s*.48-s*.11,bBot-ldyC,s*.22,s*.52,s*.08);
+    });
+
+    // 雞冠(上方三葉，正中置中)
+    const combLobes=sp==='golden_chicken'?4:3;
+    ctx.fillStyle=combCol;
+    for(let i=0;i<combLobes;i++){
+      const lbx=hcx-s*(combLobes-1)*.58+i*s*1.16;
+      const lbh=sz*(sp==='golden_chicken'?.3:.26)*(i===Math.floor(combLobes/2)?1.15:0.85);
+      Ec(ctx,lbx,hcy-hR*.82-lbh*.5,s*.7,lbh*.52);
+    }
+    if(sp==='golden_chicken'){ctx.fillStyle='#f0d830';[-s*1.3,-s*.43,s*.43,s*1.3].forEach(ox=>{Tc(ctx,hcx+ox,hcy-hR*.85,hcx+ox-s*.32,hcy-hR-sz*.38,hcx+ox+s*.32,hcy-hR-sz*.38);});}
+
+    // 臉
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR*.84,hR*.8);
+
+    // 垂肉(下方，正中)
+    ctx.fillStyle=wattleCol;Ec(ctx,hcx,hcy+hR*.75,s*.62,s*.75);
+
+    // 嘴喙(朝右，但動物本身正面)
+    ctx.fillStyle='#e0a010';
+    Tc(ctx,hcx+hR*.5,hcy+s*.05,hcx+hR*.5+s*1.0,hcy-s*.15,hcx+hR*.5+s*.88,hcy+s*.35);
+  }
+
+  // ══════════════════════════════
+  // ── DIVINE DRAGON ──
+  // silhouette: wings + horns + serpentine tail
+  // ══════════════════════════════
+  else if(isDragon){
+    // WINGS — spread dramatically
+    ctx.fillStyle='#9030c8';ctx.globalAlpha=.82;
+    // left wing
+    ctx.beginPath();
+    ctx.moveTo(cx-bRx*.5,bCy-bRy*.3);
+    ctx.bezierCurveTo(cx-bRx*1.8,bCy-bRy*1.8,cx-bRx*2.2,bCy+bRy*.2,cx-bRx*.8,bCy+bRy*.4);
+    ctx.bezierCurveTo(cx-bRx*.4,bCy+bRy*.7,cx-bRx*.1,bCy+bRy*.2,cx-bRx*.5,bCy-bRy*.3);
+    ctx.fill();
+    // right wing
+    ctx.beginPath();
+    ctx.moveTo(cx+bRx*.5,bCy-bRy*.3);
+    ctx.bezierCurveTo(cx+bRx*1.8,bCy-bRy*1.8,cx+bRx*2.2,bCy+bRy*.2,cx+bRx*.8,bCy+bRy*.4);
+    ctx.bezierCurveTo(cx+bRx*.4,bCy+bRy*.7,cx+bRx*.1,bCy+bRy*.2,cx+bRx*.5,bCy-bRy*.3);
+    ctx.fill();
+    // wing membrane lines
+    ctx.strokeStyle='rgba(200,100,255,.4)';ctx.lineWidth=s*.3;
+    [.3,.55,.75].forEach(t=>{
+      ctx.beginPath();ctx.moveTo(cx-bRx*.5,bCy-bRy*.3);ctx.lineTo(cx-bRx*(1.5+t*.3),bCy-bRy*(1.2+t*.3));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx+bRx*.5,bCy-bRy*.3);ctx.lineTo(cx+bRx*(1.5+t*.3),bCy-bRy*(1.2+t*.3));ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+
+    // TAIL — serpentine
+    ctx.strokeStyle=P.b;ctx.lineWidth=s*1.4;ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(cx-bRx*.7,bCy+bRy*.4);
+    ctx.bezierCurveTo(cx-bRx*1.4,bCy+bRy*.1,cx-bRx*1.3,bCy-bRy*.6,cx-bRx*.8,bCy-bRy*.8);
+    ctx.stroke();
+    ctx.strokeStyle=P.s;ctx.lineWidth=s*.7;ctx.stroke();
+
+    // BODY
+    ctx.fillStyle=P.s;Ec(ctx,cx,bCy+bRy*.1,bRx*.88,bRy*.82);
+    ctx.fillStyle=P.b;Ec(ctx,cx,bCy,bRx*.92,bRy*.78);
+    // scales overlay
+    ctx.fillStyle='rgba(200,100,255,.2)';
+    for(let i=-2;i<=2;i++)for(let j=-1;j<=1;j++)
+      Ec(ctx,cx+i*s*1.1+(j%2)*s*.55,bCy+j*s*.8,s*.65,s*.45);
+
+    // LEGS
+    [cx-s*2.2,cx+s*2.2].forEach((lx,i)=>{
+      const ldy=state==='walk'?Math.sin(lph+(i?Math.PI:0))*s*.5:0;
+      ctx.fillStyle=P.h;Ec(ctx,lx,bBot+ldy,s*1.05,s*1.1);
+      // claws
+      ctx.fillStyle='#f0d020';
+      [-s*.5,0,s*.5].forEach(ox=>Tc(ctx,lx+ox,bBot+ldy,lx+ox-s*.25,bBot+s*1.1+ldy,lx+ox+s*.25,bBot+s*1.1+ldy));
+    });
+
+    // FACE
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR*.9,hR*.85);
+    // scales on head
+    ctx.fillStyle='rgba(160,80,220,.28)';
+    Ec(ctx,hcx,hcy-hR*.2,hR*.7,hR*.5);
+
+    // HORNS
+    ctx.fillStyle='#f0d020';
+    Tc(ctx,hcx-s*.8,hcy-hR*.7,hcx-s*1.8,hcy-hR-sz*.4,hcx-s*.2,hcy-hR-.5);
+    Tc(ctx,hcx+s*.8,hcy-hR*.7,hcx+s*1.8,hcy-hR-sz*.4,hcx+s*.2,hcy-hR-.5);
+    // whiskers/tendrils
+    ctx.strokeStyle='#f0d020';ctx.lineWidth=s*.28;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(hcx-hR*.4,hcy);ctx.bezierCurveTo(hcx-hR*1.1,hcy-s*.8,hcx-hR*1.6,hcy-s*.3,hcx-hR*1.5,hcy+s*.5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(hcx+hR*.4,hcy);ctx.bezierCurveTo(hcx+hR*1.1,hcy-s*.8,hcx+hR*1.6,hcy-s*.3,hcx+hR*1.5,hcy+s*.5);ctx.stroke();
+  }
+
+  // ── FALLBACK / UNKNOWN ──
+  else{
+    ctx.fillStyle=P.s;Ec(ctx,cx,bCy+bRy*.1,bRx,bRy*.9);
+    ctx.fillStyle=P.b;Ec(ctx,cx,bCy,bRx*1.05,bRy*.85);
+    const legXs=[cx-s*2,cx+s*2];
+    legXs.forEach(lx=>{ctx.fillStyle=P.h;Ec(ctx,lx,bBot,s*1.0,s*1.1);});
+    ctx.fillStyle=P.sk;Ec(ctx,hcx,hcy,hR*.9,hR*.85);
+  }
+
+  // ══════════════════════════════
+  // SHARED: EYES + CHEEKS + HEART/FLOAT
+  // (draw on top of all species)
+  // ══════════════════════════════
+  const eyeColBase=PAL[genes.color||'white']?.e||'#222';
+  const eyeColFinal=(sp==='moon_rabbit')?'#cc0000':(sp==='ghost_pig'||isDragon)?'special':eyeColBase;
+  drawEyes(ctx,hcx,hcy,s,eyeClose,eyeColFinal,state,frame,sp);
+
+  if(!eyeClose)drawCheeks(ctx,hcx,hcy,s);
+
+  // HEART (breeding)
+  if(heartShow){
+    ctx.font=`${Math.round(s*2)}px sans-serif`;
+    ctx.fillStyle='#ff4488';ctx.globalAlpha=.9+Math.sin(frame*.18)*.1;
+    ctx.fillText('♥',hcx-s*.7,hcy-hR-sz*.12+Math.sin(frame*.14)*s*.6);
+    ctx.globalAlpha=1;
+  }
+
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════════
+let G={
+  gold:5000,
+  farms:[{slots:[null,null,null,null],id:0}],farmI:0,
+  ranches:[{pets:[],id:0}],ranchI:0,
+  cooks:[{queue:[],maxQ:5,id:0}],cookI:0,
+  xtals:[{nodes:[],type:'mixed',id:0}],xtalI:0,
+  cap:4,bag:[],crystals:{fire:0,dew:0,light:0},lightOn:false,
+  codex:[],ach:[],tasks:[],lastReset:0,bSlots:[],
+  totalBreed:0,totalHarvest:0,totalCook:0,totalEarn:0,totalFeed:0,
+  foundRec:new Set(['ra','rb','rmt']),
+};
+
+// pet helpers
+function calcR(g){const a=ANIMALS[g.species];let s=a?.r||0;if(g.eyeSpec)s++;if(['stripe','glow'].includes(g.pattern))s++;return Math.min(4,s);}
+function makePet(spId,pA,pB){
+  const a=ANIMALS[spId]||ANIMALS.sheep;const cols=a.cols||['white'];
+  const color=pA?(Math.random()<.5?pA.g.color:(pB?.g.color||cols[0])):cols[Math.floor(Math.random()*cols.length)];
+  const patP=[{v:'none',w:55},{v:'spot',w:28},{v:'stripe',w:14},{v:'glow',w:3}];
+  const wR=p=>{const t=p.reduce((s,i)=>s+(i.w||1),0);let x=Math.random()*t,c=0;for(const i of p){c+=(i.w||1);if(x<=c)return i.v;}return p[p.length-1].v;};
+  const pattern=pA?(Math.random()<.5?pA.g.pattern:(pB?.g.pattern||wR(patP))):wR(patP);
+  const g={species:spId,color,pattern};
+  return{id:uid(),n:a.n+'兒',species:spId,g,rarity:calcR(g),
+    mood:100,isBreeding:false,bf:0,bd:Date.now(),
+    fruitsEaten:0,mutAcc:0,feedLog:[],pendingMut:null,pA:pA?.id||'',pB:pB?.id||''};
+}
+function mutG(g,boost){
+  const rate=.05+boost+(G.lightOn?.25:0);const ng={...g};
+  const wR=p=>{const t=p.reduce((s,i)=>s+i.w,0);let x=Math.random()*t,c=0;for(const i of p){c+=i.w;if(x<=c)return i.v;}return p[p.length-1].v;};
+  if(Math.random()<rate)ng.color=wR([{v:'white',w:25},{v:'brown',w:20},{v:'grey',w:18},{v:'orange',w:14},{v:'pink',w:10},{v:'black',w:7},{v:'red',w:4},{v:'purple',w:3},{v:'gold',w:2}]);
+  if(Math.random()<rate*.4)ng.pattern=wR([{v:'none',w:55},{v:'spot',w:28},{v:'stripe',w:14},{v:'glow',w:3}]);
+  return ng;
+}
+function checkMut(pet){
+  const fl=pet.feedLog||[];
+  const MAP={strawberry_sheep:{req:'apple_bbq',base:'sheep'},blueberry_rabbit:{req:'berry_bbq',base:'rabbit'},caramel_pig:{req:'melon_pork',base:'pig'},chili_chicken:{req:'spicy_leg',base:'chicken'},star_sheep:{req:'star_bbq',base:'strawberry_sheep'},moon_rabbit:{req:'star_bbq',base:'blueberry_rabbit'},smoky_pig:{req:'bbq_platter',base:'pig'},golden_chicken:{req:'star_bbq',base:'chili_chicken'}};
+  for(const[t,c]of Object.entries(MAP))if(pet.species===c.base&&fl.includes(c.req))return t;
+  return null;
+}
+function regCodex(pet){
+  const key=`${pet.species}_${pet.g.color}_${pet.g.pattern}`;
+  if(!G.codex.find(c=>c.key===key)){G.codex.push({key,species:pet.species,g:pet.g,rarity:pet.rarity,n:pet.n});toast(`📖 ${ANIMALS[pet.species]?.n} 加入圖鑑！`);}
+}
+
+// ══════════════════════════════════════════════════
+// NAVIGATION — overview ↔ zone
+// ══════════════════════════════════════════════════
+let _curZone=null;
+const ZONE_CFG={
+  farm:{title:'🌱 農場',btm:'zbtm-farm',content:'zc-farm'},
+  ranch:{title:'🏡 牧場',btm:'zbtm-ranch',content:'zc-ranch'},
+  cook:{title:'🍳 烹飪',btm:'zbtm-cook',content:'zc-cook'},
+  crystal:{title:'💎 晶洞',btm:'zbtm-crystal',content:'zc-crystal'},
+};
+
+function openZone(z){
+  _curZone=z;
+  // hide all zone contents & btm groups
+  ['farm','ranch','cook','crystal'].forEach(id=>{
+    const c=$(`zc-${id}`),b=$(`zbtm-${id}`);
+    if(c)c.style.display='none';
+    if(b)b.style.display='none';
+  });
+  const cfg=ZONE_CFG[z];
+  ss('zone-title',cfg.title);
+  const c=$(cfg.content);if(c)c.style.display='block';
+  const b=$(cfg.btm);if(b)b.style.display='flex';
+  // switch screens
+  $('ov-screen').classList.remove('active');
+  $('zone-screen').classList.add('active');
+  // render zone
+  setTimeout(()=>{
+    if(z==='farm'){renderFarm();}
+    if(z==='ranch'){initRanchCanvas();renderRanch();}
+    if(z==='cook'){renderCookStation();}
+    if(z==='crystal'){renderCrystal();}
+  },30);
+}
+
+function closeZone(){
+  $('zone-screen').classList.remove('active');
+  $('ov-screen').classList.add('active');
+  _curZone=null;
+  updateOverviewHints();
+}
+
+function updateOverviewHints(){
+  // Farm hint: ripe count
+  const farmSlots=(G.farms[G.farmI]||G.farms[0]).slots;
+  const ripe=farmSlots.filter(s=>s&&Date.now()-s.pt>=s.grow*1000).length;
+  const planted=farmSlots.filter(Boolean).length;
+  ss('ov-farm-hint',ripe?`${ripe}格可收成`:planted?`${planted}格種植中`:'點擊種植');
+  // Ranch hint
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  ss('ov-ranch-hint',pets.length?`${pets.length}隻動物`:'點擊進入');
+  // Cook hint
+  const q=(G.cooks[G.cookI]||G.cooks[0]).queue||[];
+  const rdyQ=q.filter(i=>Date.now()>=i.fin).length;
+  ss('ov-cook-hint',rdyQ?`${rdyQ}道可領取`:q.length?`${q.length}道烹飪中`:'點擊烹飪');
+  // Crystal hint
+  const xnodes=(G.xtals[G.xtalI]||G.xtals[0]).nodes||[];
+  const rdyX=xnodes.filter(n=>Date.now()>=n.rdy).length;
+  ss('ov-crystal-hint',rdyX?`${rdyX}個可挖掘`:'晶石生長中');
+}
+
+// ══════════════════════════════════════════════════
+// RANCH — clean rewrite
+// ══════════════════════════════════════════════════
+let rFrame=0;
+const pEls={},pPos={},pDir={};
+let _dragId=null,_dsx=0,_dsy=0,_dpx=0,_dpy=0;
+
+function initRanchCanvas(){
+  const cv=$('rcanvas'),sc=$('ranch-zone');
+  if(!cv||!sc)return;
+  const W=sc.offsetWidth,H=sc.offsetHeight;
+  if(!W||!H)return;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.imageSmoothingEnabled=true;
+
+  // Sky
+  const sk=ctx.createLinearGradient(0,0,0,H*.5);
+  sk.addColorStop(0,'#4a9ed8');sk.addColorStop(.6,'#82c8f0');sk.addColorStop(1,'#b0dcf8');
+  ctx.fillStyle=sk;ctx.fillRect(0,0,W,H*.5);
+
+  // Sun
+  ctx.fillStyle='rgba(255,235,120,.95)';ctx.beginPath();ctx.arc(W*.84,H*.1,16,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,240,160,.35)';ctx.beginPath();ctx.arc(W*.84,H*.1,24,0,Math.PI*2);ctx.fill();
+
+  // Clouds
+  ctx.fillStyle='rgba(255,255,255,.88)';
+  [[.13,.09,28,13],[.17,.06,22,11],[.21,.09,22,11],[.6,.1,24,11],[.64,.07,20,10],[.68,.1,18,9]].forEach(([x,y,rx,ry])=>Ec(ctx,x*W,y*H,rx,ry));
+
+  // Far hill
+  ctx.fillStyle='#72b84a';
+  ctx.beginPath();ctx.moveTo(0,H*.48);
+  for(let x=0;x<=W;x+=16)ctx.lineTo(x,H*.4+Math.sin(x*.035)*H*.06);
+  ctx.lineTo(W,H*.5);ctx.lineTo(0,H*.5);ctx.closePath();ctx.fill();
+
+  // Grass
+  const gr=ctx.createLinearGradient(0,H*.48,0,H);
+  gr.addColorStop(0,'#7acc48');gr.addColorStop(.25,'#5aaa30');gr.addColorStop(1,'#3a7820');
+  ctx.fillStyle=gr;ctx.fillRect(0,H*.48,W,H*.52);
+
+  // Dirt path
+  const pt=ctx.createLinearGradient(0,H*.68,0,H);pt.addColorStop(0,'#c8a058');pt.addColorStop(1,'#a07840');
+  ctx.fillStyle=pt;
+  ctx.beginPath();ctx.moveTo(W*.38,H*.49);ctx.bezierCurveTo(W*.41,H*.65,W*.43,H*.82,W*.41,H);ctx.lineTo(W*.61,H);ctx.bezierCurveTo(W*.59,H*.82,W*.61,H*.65,W*.64,H*.49);ctx.closePath();ctx.fill();
+
+  // Grass texture
+  ctx.strokeStyle='rgba(80,160,40,.28)';ctx.lineWidth=1.5;
+  for(let x=8;x<W;x+=10){ctx.beginPath();ctx.moveTo(x,H*.5);ctx.lineTo(x+3,H*.5-6);ctx.stroke();}
+
+  // Trees
+  [[.04,.52],[.93,.5],[.06,.72],[.92,.68]].forEach(([tx,ty])=>{
+    ctx.fillStyle='#5a3010';ctx.fillRect(tx*W-3,ty*H,6,H*.14);
+    ctx.fillStyle='#3a8820';Ec(ctx,tx*W,ty*H,13,15);
+    ctx.fillStyle='#4aaa30';Ec(ctx,tx*W,ty*H-10,9,11);
+  });
+
+  // Flowers
+  const fl=[['#ff9090','#ee4444'],['#ffff90','#ddb820'],['#ff90ff','#cc44aa'],['#90c8ff','#3388cc']];
+  for(let i=0;i<20;i++){
+    const fx=(i*67+20)%W,fy=H*.54+((i*41)%(H*.38));
+    const [fc,fd]=fl[i%fl.length];
+    ctx.fillStyle=fc;ctx.beginPath();ctx.arc(fx,fy,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=fd;ctx.beginPath();ctx.arc(fx,fy,1.5,0,Math.PI*2);ctx.fill();
+  }
+
+  // Fence posts
+  for(let i=0;i<=W;i+=22){
+    ctx.fillStyle='#d4a050';ctx.fillRect(i,H*.47,5,18);
+    ctx.fillStyle='#e8c070';ctx.fillRect(i,H*.47,5,3);
+  }
+  ctx.fillStyle='#c89048';ctx.fillRect(0,H*.50,W,5);
+  ctx.fillStyle='#b87838';ctx.fillRect(0,H*.535,W,3);
+}
+
+function renderRanch(){
+  const sc=$('ranch-zone'),layer=$('ral');
+  if(!sc||!layer)return;
+  const W=sc.offsetWidth||390,H=sc.offsetHeight||500;
+  const area=G.ranches[G.ranchI]||G.ranches[0];
+  const pets=area.pets||[];
+  const n=Math.max(pets.length,1);
+  const SZ=40; // 像素風小尺寸
+
+  // remove departed pets
+  Object.keys(pEls).forEach(id=>{
+    if(!pets.find(p=>p.id===id)){pEls[id]?.wrap?.remove();delete pEls[id];}
+  });
+
+  pets.forEach((pet,i)=>{
+    // init position — grass zone only (55%-90% of H, 10%-85% of W)
+    if(!pPos[pet.id]){
+      pPos[pet.id]={x:10+i*(72/n),y:58+Math.random()*28};
+      pDir[pet.id]={dx:Math.random()<.5?1:-1,dy:Math.random()<.5?.25:-.25};
+    }
+    // auto drift
+    if(!pet.isBreeding&&pet.id!==_dragId){
+      const pos=pPos[pet.id],dir=pDir[pet.id];
+      pos.x+=dir.dx*(0.05+Math.random()*.05);
+      pos.y+=dir.dy*(0.03+Math.random()*.03);
+      if(pos.x>85){dir.dx=-1;}if(pos.x<10){dir.dx=1;}
+      if(pos.y>90){dir.dy=-0.25;}if(pos.y<56){dir.dy=0.25;}
+    }
+
+    // create DOM element if needed
+    if(!pEls[pet.id]){
+      const wrap=mk('div','pw');
+      const cv2=document.createElement('canvas');
+      const nm=mk('div','pw-nm');
+      const mb=mk('div','pw-mb');const mbf=mk('div','pw-mbf');mb.appendChild(mbf);
+      wrap.appendChild(cv2);wrap.appendChild(nm);wrap.appendChild(mb);
+
+      // drag: touch
+      wrap.addEventListener('touchstart',e=>{
+        _dragId=pet.id;const t=e.touches[0];
+        _dsx=t.clientX;_dsy=t.clientY;_dpx=pPos[pet.id].x;_dpy=pPos[pet.id].y;
+        e.preventDefault();
+      },{passive:false});
+      // drag: mouse
+      wrap.addEventListener('mousedown',e=>{
+        _dragId=pet.id;_dsx=e.clientX;_dsy=e.clientY;_dpx=pPos[pet.id].x;_dpy=pPos[pet.id].y;
+        e.preventDefault();
+      });
+      // tap/click → wheel
+      let _dmv=false;
+      wrap.addEventListener('touchmove',()=>{_dmv=true;},{passive:true});
+      wrap.addEventListener('touchend',()=>{if(!_dmv)openWheel(pet.id);_dmv=false;_dragId=null;});
+      wrap.addEventListener('click',e=>{if(!_dmv)openWheel(pet.id);});
+      layer.appendChild(wrap);
+      pEls[pet.id]={wrap,cv:cv2,nm,mbf,mb};
+    }
+
+    const el=pEls[pet.id];
+    const cW=Math.round(SZ*2),cH=Math.round(SZ*2.4);
+    el.cv.width=cW;el.cv.height=cH;
+    el.cv.style.width=cW+'px';el.cv.style.height=cH+'px';
+    const faceL=(pDir[pet.id]?.dx||1)<0;
+    const state=pet.isBreeding?'breed':pet.mood<25?'sleep':pet.mood>=80?'happy':'walk';
+    drawPet(el.cv,pet.g,state,rFrame,faceL,SZ);
+    el.nm.textContent=pet.n;
+    const mc=pet.mood>=70?'#4aaa38':pet.mood>=40?'#e08830':'#cc4040';
+    el.mbf.style.width=pet.mood+'%';el.mbf.style.background=mc;
+    el.mb.style.width=cW+'px';
+
+    const px=(pPos[pet.id].x/100)*W;
+    const py=(pPos[pet.id].y/100)*H;
+    el.wrap.style.cssText=`position:absolute;left:${px}px;top:${py}px;transform:translate(-50%,-100%);pointer-events:all`;
+  });
+
+  ss('rb',`${pets.length}/${G.cap}`);
+  renderATabs('rtabs',G.ranches,G.ranchI,i=>{G.ranchI=i;initRanchCanvas();renderRanch();});
+  const rexpBtn=$('btn-rexp');
+  if(rexpBtn)rexpBtn.textContent=G.ranches.length<3?`🏗 2區($1000)`:'牧場已最大';
+}
+
+// Global drag handlers
+document.addEventListener('touchmove',e=>{
+  if(!_dragId)return;
+  const sc=$('ranch-zone');if(!sc)return;
+  const r=sc.getBoundingClientRect(),t=e.touches[0];
+  const dx=(t.clientX-_dsx)/r.width*100,dy=(t.clientY-_dsy)/r.height*100;
+  pPos[_dragId].x=Math.max(10,Math.min(85,_dpx+dx));
+  pPos[_dragId].y=Math.max(56,Math.min(90,_dpy+dy));
+  const el=pEls[_dragId];
+  if(el){const px=(pPos[_dragId].x/100)*r.width,py=(pPos[_dragId].y/100)*r.height;el.wrap.style.left=px+'px';el.wrap.style.top=py+'px';}
+},{passive:true});
+document.addEventListener('mousemove',e=>{
+  if(!_dragId)return;
+  const sc=$('ranch-zone');if(!sc)return;
+  const r=sc.getBoundingClientRect();
+  const dx=(e.clientX-_dsx)/r.width*100,dy=(e.clientY-_dsy)/r.height*100;
+  pPos[_dragId].x=Math.max(10,Math.min(85,_dpx+dx));
+  pPos[_dragId].y=Math.max(56,Math.min(90,_dpy+dy));
+  const el=pEls[_dragId];
+  if(el){const r2=sc.getBoundingClientRect();const px=(pPos[_dragId].x/100)*r2.width,py=(pPos[_dragId].y/100)*r2.height;el.wrap.style.left=px+'px';el.wrap.style.top=py+'px';}
+});
+document.addEventListener('mouseup',()=>{_dragId=null;});
+document.addEventListener('touchend',()=>{_dragId=null;});
+
+// ══════════════════════════════════════════════════
+// FARM
+// ══════════════════════════════════════════════════
+function farmSlots(){return(G.farms[G.farmI]||G.farms[0]).slots;}
+function renderFarm(){
+  const grid=$('potgrid');if(!grid)return;
+  grid.innerHTML='';
+  const slots=farmSlots();
+  const cols=slots.length<=4?'c2':'c2';
+  grid.className=`pot-grid ${cols}`;
+  const now=Date.now();
+  slots.forEach((s,i)=>{
+    const pot=mk('div','pot');
+    if(!s){
+      pot.innerHTML=`<div class="pot-ico">🪴</div><div class="pot-lbl">點擊種植</div>`;
+      pot.onclick=()=>openSeedPick(i);
+    }else{
+      const g=s.grow||60,el=now-s.pt,ready=el>=g*1000;
+      const prog=Math.min(100,(el/(g*1000))*100);
+      const ico=ready?(s.e||'🌿'):prog>65?'🌿':prog>30?'🌱':'🫘';
+      if(ready)pot.classList.add('ripe');
+      const rem=ready?0:Math.max(0,Math.ceil((g*1000-el)/1000));
+      pot.innerHTML=`<div class="pot-ico">${ico}</div><div class="pot-lbl">${s.n} ${ready?'✅':rem+'秒'}</div>${!ready?`<div class="pot-bar"><div class="pot-fill" style="width:${prog.toFixed(0)}%"></div></div>`:''}`;
+      if(ready)pot.onclick=ev=>harvest(i,ev);
+    }
+    grid.appendChild(pot);
+  });
+  ss('fb',slots.length+'格');
+  renderATabs('ftabs',G.farms,G.farmI,i=>{G.farmI=i;renderFarm();});
+  const fexpBtn=$('btn-fexp');
+  if(fexpBtn){const cur=G.farms[G.farmI];fexpBtn.textContent=cur.slots.length<6?'🌾 +格子($300)':(G.farms.length<3?'🏗 解鎖2區($800)':'農場已最大');}
+}
+function openSeedPick(slotIdx){
+  gpop('🌱 選擇種子',Object.entries(PLANTS).map(([pid,pl])=>({
+    label:`${pl.e} ${pl.n}`,sub:`$${pl.p}・${pl.grow}秒・售$${pl.sell}×${pl.yld}`,
+    disabled:G.gold<pl.p,
+    fn:()=>{G.gold-=pl.p;SFX.plant();farmSlots()[slotIdx]={...pl,id:pid,pt:Date.now(),uid:uid()};
+      fmEl(`🌱 種下${pl.n}！`,$('farm-zone'),'#a0e080');hideOv('gpop');renderFarm();autoSave();}
+  })));
+}
+function harvest(i,ev){
+  const s=farmSlots()[i];if(!s)return;
+  if(Date.now()-s.pt<(s.grow||60)*1000)return;
+  farmSlots()[i]=null;
+  const yc=Math.max(1,Math.floor((s.yld||3)*(0.8+Math.random()*.4)));
+  for(let j=0;j<yc;j++)G.bag.push({id:s.id,n:s.n,e:s.e||'🌿',col:s.col||'#888',sell:s.sell||8,cat:'raw',uid:uid()});
+  G.totalHarvest++;SFX.harvest();
+  fmEl(`+${yc}${s.e}`,$('farm-zone'),'#a0e080');
+  updTask('harvest3');chkAch();renderFarm();updBag();autoSave();
+}
+function doFarmExpand(){
+  const cur=G.farms[G.farmI];
+  if(cur.slots.length<6){
+    const cost=300;if(G.gold<cost){toast(`金幣不足（需$${cost}）`);SFX.err();return;}
+    G.gold-=cost;cur.slots.push(null,null);toast(`🌾 擴張！現在${cur.slots.length}格`);SFX.buy();
+  }else if(G.farms.length<3){
+    const cost=800;if(G.gold<cost){toast(`金幣不足（需$${cost}）`);SFX.err();return;}
+    G.gold-=cost;G.farms.push({slots:[null,null,null,null],id:G.farms.length});G.farmI=G.farms.length-1;toast('🏗 農場2區！');SFX.buy();
+  }else toast('農場已達最大');
+  renderFarm();autoSave();
+}
+
+// ══════════════════════════════════════════════════
+// COOK
+// ══════════════════════════════════════════════════
+let ckSlots=[null,null],ckCs=null;
+function renderCookStation(){
+  [0,1].forEach(idx=>{
+    const s=ckSlots[idx];
+    const slotEl=$(idx===0?'cks0':'cks1');
+    const icoEl=$(idx===0?'ckico0':'ckico1');
+    const nmEl=$(idx===0?'cknm0':'cknm1');
+    if(!slotEl)return;
+    slotEl.querySelectorAll('.ck-slot-ico:not(:first-child),.ck-slot-x').forEach(e=>e.remove());
+    if(s){
+      slotEl.classList.add('filled');
+      icoEl.textContent=EMOJI[s.id]||s.e||'🍽️';icoEl.style.display='flex';
+      nmEl.textContent=s.n;
+      const x=mk('div','ck-slot-x');x.textContent='✕';x.onclick=ev=>{ev.stopPropagation();ckSlots[idx]=null;renderCookStation();};slotEl.appendChild(x);
+    }else{
+      slotEl.classList.remove('filled');icoEl.textContent='＋';icoEl.style.display='flex';
+      nmEl.textContent=idx===0?'食材 1':'食材 2（可選）';
+    }
+  });
+  const cs=$('ck-cs');
+  if(cs){cs.innerHTML='';
+    if(ckCs){cs.classList.add('filled');const cc=CRYSTALS[ckCs];cs.innerHTML=`<div style="font-size:22px">${cc.e}</div><div style="font-size:10px;font-weight:800;color:rgba(180,140,255,.9);margin-top:2px">${cc.n} <span style="color:#ff9090;cursor:pointer" onclick="ckCs=null;renderCookStation()">✕</span></div>`;}
+    else{cs.classList.remove('filled');cs.innerHTML=`<div style="font-size:20px">💠</div><div style="font-size:10px;font-weight:800;color:rgba(180,140,255,.75);margin-top:2px">晶石（可選）</div>`;}}
+  const rec=findRec(ckSlots[0]?.id,ckSlots[1]?.id);
+  const resEl=$('ck-res-txt'),btn=$('ck-gobtn');
+  if(ckSlots[0]){
+    const out=rec?PRODS[rec.out]:{n:'隨意燉',sell:30};
+    const bonus=ckCs==='fire'?1.3:1;
+    if(resEl)resEl.textContent=`→ ${EMOJI[rec?.out]||'🍽️'} ${out.n}（$${Math.floor((out.sell||30)*bonus)}）`;
+    if(btn)btn.disabled=false;
+  }else{if(resEl)resEl.textContent='選食材後顯示結果';if(btn)btn.disabled=true;}
+  const qel=$('ck-queue');if(qel){
+    qel.innerHTML='';
+    const area=G.cooks[G.cookI]||G.cooks[0];const now=Date.now();
+    (area.queue||[]).forEach((item,qi)=>{
+      const rdy=now>=item.fin;const rem=rdy?0:Math.ceil((item.fin-now)/1000);
+      const d=mk('div','cqi'+(rdy?' rdy':''));
+      d.innerHTML=`<span class="cqi-ico">${EMOJI[item.out]||'🍽️'}</span><span class="cqi-nm">${PRODS[item.out]?.n||item.out}</span><span class="cqi-t">${rdy?'✅點領':rem+'s'}</span>`;
+      if(rdy)d.onclick=ev=>collectCook(qi,ev);qel.appendChild(d);
+    });
+    const mxQ=area.maxQ||5;ss('ckb',`${(area.queue||[]).length}/${mxQ}`);
+    const cexpBtn=$('btn-cexp');if(cexpBtn)cexpBtn.textContent=mxQ<10?`🍳 +產線($${200+(mxQ-5)*50})`:`🏗 新爐($800)`;
+  }
+  renderATabs('ctabs',G.cooks,G.cookI,i=>{G.cookI=i;renderCookStation();});
+}
+function ckSlotClick(idx){openBag(null,idx);}
+function ckCsClick(){
+  const avail=Object.entries(CRYSTALS).filter(([k])=>(G.crystals[k]||0)>0);
+  if(!avail.length){toast('沒有晶石');return;}
+  gpop('💎 選擇晶石',avail.map(([cid,cc])=>({label:`${cc.e} ${cc.n}`,sub:`庫存${G.crystals[cid]}個・${cc.eff}`,fn:()=>{G.crystals[cid]--;ckCs=cid;hideOv('gpop');renderCookStation();renderCrystal();}})));
+}
+function findRec(id1,id2){
+  if(!id1)return null;
+  if(id2){const r=RECIPES.find(r=>r.ing.length===2&&((r.ing[0]===id1&&r.ing[1]===id2)||(r.ing[0]===id2&&r.ing[1]===id1)||(id1===id2&&r.ing[0]===id1&&r.ing[1]===id1)));if(r)return r;}
+  return RECIPES.find(r=>r.ing.length===1&&r.ing[0]===id1)||null;
+}
+function doCook(){
+  const s0=ckSlots[0];if(!s0){toast('至少需要食材1');return;}
+  const area=G.cooks[G.cookI]||G.cooks[0];
+  const mxQ=area.maxQ||5;if((area.queue||[]).length>=mxQ){toast(`產線已滿（${mxQ}條）`);return;}
+  const rec=findRec(s0.id,ckSlots[1]?.id);
+  const out=rec?rec.out:'stew';const bonus=ckCs==='fire'?1.3:1;
+  let t=(rec?.t||10)*1000;if(ckCs==='dew')t*=.6;
+  if(!area.queue)area.queue=[];
+  area.queue.push({out,sell:Math.floor((PRODS[out]?.sell||30)*bonus),fin:Date.now()+t,cs:ckCs});
+  if(rec)G.foundRec.add(rec.id);
+  SFX.cook();fmEl('🍳 開始烹飪！',$('cook-zone'),'#ffe080');
+  ckSlots=[null,null];ckCs=null;renderCookStation();autoSave();
+}
+function collectCook(qi,ev){
+  const area=G.cooks[G.cookI]||G.cooks[0];
+  const item=area.queue?.[qi];if(!item||Date.now()<item.fin)return;
+  area.queue.splice(qi,1);
+  const pd=PRODS[item.out]||{n:item.out,sell:30,col:'#786858',cat:'food'};
+  G.bag.push({...pd,id:item.out,e:EMOJI[item.out]||'🍽️',sell:item.sell||pd.sell,uid:uid()});
+  G.totalCook++;SFX.cook();
+  fmEl(`✨ ${pd.n}完成！`,$('cook-zone'),'#ffe080');
+  updTask('cook2');chkAch();renderCookStation();updBag();autoSave();
+}
+function doCookExpand(){
+  const area=G.cooks[G.cookI]||G.cooks[0];const mxQ=area.maxQ||5;
+  if(mxQ<10){const cost=200+(mxQ-5)*50;if(G.gold<cost){toast(`金幣不足（需$${cost}）`);SFX.err();return;}G.gold-=cost;area.maxQ=(mxQ+1);toast(`🍳 產線+1`);SFX.buy();}
+  else if(G.cooks.length<3){const cost=800;if(G.gold<cost){toast(`金幣不足`);SFX.err();return;}G.gold-=cost;G.cooks.push({queue:[],maxQ:5,id:G.cooks.length});G.cookI=G.cooks.length-1;toast('🏗 烹飪2區！');SFX.buy();}
+  else toast('烹飪區已最大');
+  renderCookStation();autoSave();
+}
+
+// ══════════════════════════════════════════════════
+// CRYSTAL
+// ══════════════════════════════════════════════════
+let xInit=false;
+function spawnNode(ai){
+  const a=G.xtals[ai]||G.xtals[0];if(!a.nodes)a.nodes=[];if(a.nodes.length>=8)return;
+  const types=a.type==='mixed'?Object.keys(CRYSTALS):[a.type];
+  const type=types[Math.floor(Math.random()*types.length)];
+  a.nodes.push({id:uid(),type,born:Date.now(),rdy:Date.now()+120000+Math.random()*240000,maxRdy:Date.now()+600000});
+}
+function initXtals(){G.xtals.forEach((a,i)=>{a.nodes=a.nodes||[];while(a.nodes.length<6)spawnNode(i);});}
+
+function renderCrystal(){
+  if(!xInit){xInit=true;
+    const ssl=$('cssl');if(ssl)for(let i=0;i<45;i++){const s=mk('div','cs-st');s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*56}%;width:${1+Math.random()*2.5}px;height:${1+Math.random()*2.5}px;animation-delay:${Math.random()*3}s;animation-duration:${1.2+Math.random()*2.5}s`;ssl.appendChild(s);}
+    const cstl=$('cstl');if(cstl)for(let i=0;i<26;i++){const s=mk('div','stlc');s.style.cssText=`left:${i*4}%;width:${4+Math.sin(i*.9)*5}px;height:${10+Math.sin(i*.75)*12}px`;cstl.appendChild(s);}
+  }
+  const nl=$('csnl');if(!nl)return;nl.innerHTML='';
+  const a=G.xtals[G.xtalI]||G.xtals[0];
+  const now=Date.now();
+  const SHAPES={fire:['🔸','🔶','🔥'],dew:['💠','🔹','💎'],light:['·','✦','✨']};
+  // 2行×3列 固定格子
+  const COLS=3;
+  (a.nodes||[]).forEach((n,i)=>{
+    const col=i%COLS,row=Math.floor(i/COLS);
+    const xPct=14+col*30+Math.sin(i*1.5)*3;
+    const yPxFromBot=row===0?55:20;
+    const rdy=now>=n.rdy;
+    const age=Math.min(1,(now-n.born)/Math.max(1,n.rdy-n.born));const lv=Math.floor(1+age*2);
+    const shapes=SHAPES[n.type]||['💎'];const ico=shapes[Math.min(lv-1,shapes.length-1)];
+    const nd=mk('div',`csnd ${n.type}`);
+    nd.style.cssText=`left:${xPct}%;bottom:${yPxFromBot}px;transform:translateX(-50%)`;
+    const icoSz=18+lv*8;
+    const rem=rdy?'✨點挖掘':`Lv${lv} ${Math.ceil((n.rdy-now)/60000)}分`;
+    nd.innerHTML=`<div style="font-size:${icoSz}px;line-height:1">${ico}</div><div class="csnd-lbl">${rem}</div>`;
+    if(rdy){nd.classList.add('ready');nd.onclick=ev=>harvestNode(n.id,ev);}
+    else nd.classList.add('growing');
+    nl.appendChild(nd);
+  });
+  const rdyN=(a.nodes||[]).filter(n=>now>=n.rdy).length;
+  ss('xb',rdyN?rdyN+'可挖':'生長中');
+  const btnlt=$('btnlt');if(btnlt){btnlt.textContent=`✨ 光晶(${G.crystals.light||0})`;btnlt.disabled=!G.crystals.light;}
+  renderATabs('xtabs',G.xtals,G.xtalI,i=>{G.xtalI=i;renderCrystal();});
+}
+function harvestNode(id,ev){
+  const a=G.xtals[G.xtalI]||G.xtals[0];
+  const n=(a.nodes||[]).find(x=>x.id===id);if(!n||Date.now()<n.rdy)return;
+  const age=Math.min(1,(Date.now()-n.born)/600000);const yld=Math.floor(1+age*2);
+  for(let j=0;j<yld;j++)G.crystals[n.type]=(G.crystals[n.type]||0)+1;
+  a.nodes=a.nodes.filter(x=>x.id!==id);spawnNode(G.xtalI);
+  SFX.dig();fmEl(`+${yld} ${CRYSTALS[n.type]?.e}`,$('crystal-zone'),'#c0a0ff');
+  updTask('dig1');chkAch();renderCrystal();autoSave();
+}
+function activateLight(){
+  if(!G.crystals.light){toast('沒有光晶');SFX.err();return;}
+  G.crystals.light--;G.lightOn=true;toast('✨ 光晶啟動！突變率大增');SFX.dig();renderCrystal();autoSave();
+}
+function doXtalExpand(){
+  const cost=350;if(G.gold<cost){toast(`金幣不足（需$${cost}）`);SFX.err();return;}
+  if(G.xtals.length>=3){toast('晶洞已最大');return;}
+  G.gold-=cost;
+  gpop('💎 選擇晶洞屬性',[
+    {label:'🔥 純火晶洞',sub:'烹飪售價+30%',fn:()=>{G.xtals.push({nodes:[],type:'fire',id:G.xtals.length});G.xtalI=G.xtals.length-1;initXtals();toast('🔥 火晶洞！');hideOv('gpop');renderCrystal();}},
+    {label:'💧 純露晶洞',sub:'烹飪時間-40%',fn:()=>{G.xtals.push({nodes:[],type:'dew',id:G.xtals.length});G.xtalI=G.xtals.length-1;initXtals();toast('💧 露晶洞！');hideOv('gpop');renderCrystal();}},
+    {label:'✨ 純光晶洞',sub:'突變率×5',fn:()=>{G.xtals.push({nodes:[],type:'light',id:G.xtals.length});G.xtalI=G.xtals.length-1;initXtals();toast('✨ 光晶洞！');hideOv('gpop');renderCrystal();}},
+  ]);
+  SFX.buy();autoSave();
+}
+
+// ══════════════════════════════════════════════════
+// AREA TABS
+// ══════════════════════════════════════════════════
+function renderATabs(id,areas,cur,onSwitch){
+  const el=$(id);if(!el)return;el.innerHTML='';
+  if(areas.length<=1)return;
+  const NAMES={ftabs:['農場1','農場2','農場3'],rtabs:['牧場1','牧場2','牧場3'],ctabs:['烹飪1','烹飪2','烹飪3'],xtabs:['晶洞1','晶洞2','晶洞3']};
+  const names=NAMES[id]||['1','2','3'];
+  areas.forEach((a,i)=>{const t=mk('div','atab'+(i===cur?' on':''));t.textContent=names[i]||`區${i+1}`;t.onclick=()=>onSwitch(i);el.appendChild(t);});
+}
+
+// ══════════════════════════════════════════════════
+// BAG
+// ══════════════════════════════════════════════════
+let _bagTab='all',_ckIdx=-1,_batchMode=false,_batchSel=new Set();
+function updBag(){ss('bbadge',G.bag.length);}
+function openBag(tab,ckIdx){
+  _bagTab=tab||_bagTab;_ckIdx=ckIdx??-1;
+  if(_ckIdx>=0)_batchMode=false;
+  ss('bag-title',_ckIdx>=0?`🍳 選食材 ${_ckIdx+1}`:'🎒 背包');
+  const TABS=[{id:'all',lbl:'📦全部'},{id:'raw',lbl:'🌾農場'},{id:'food',lbl:'🍽熟食'},{id:'special',lbl:'✨特殊'}];
+  const tabsEl=$('bag-tabs');tabsEl.innerHTML='';
+  TABS.forEach(t=>{const btn=mk('button',`btab ${_bagTab===t.id?'on':'off'}`);btn.textContent=t.lbl;btn.onclick=()=>{_bagTab=t.id;openBag(t.id,_ckIdx);};tabsEl.appendChild(btn);});
+  if(_ckIdx<0){const bb=mk('button',`btab ${_batchMode?'batch-on':'off'}`);bb.textContent=_batchMode?'💰 選取中':'💰 批售';bb.onclick=()=>{_batchMode=!_batchMode;_batchSel=new Set();openBag(_bagTab,-1);};tabsEl.appendChild(bb);}
+  const grid=$('bag-grid');grid.innerHTML='';
+  const items=G.bag.filter(it=>{if(_bagTab==='all')return true;if(_bagTab==='raw')return it.cat==='raw';if(_bagTab==='food')return it.cat==='food';if(_bagTab==='special')return it.cat==='special'||it.cat==='legend';return true;});
+  if(!items.length){const e=mk('div','bag-empty');e.textContent=_ckIdx>=0?'背包空的，先去農場收成！':'這裡空空的～';grid.appendChild(e);}
+  else items.forEach(it=>{
+    const card=mk('div','bag-item'+(_batchMode&&_batchSel.has(it.uid)?' batch-chk':''));
+    const ico=mk('div','bi-ico');ico.textContent=it.e||EMOJI[it.id]||'🍽️';card.appendChild(ico);
+    const nm=mk('div','bi-nm');nm.textContent=it.n;card.appendChild(nm);
+    const val=mk('div','bi-val');val.textContent=`$${PRODS[it.id]?.sell||it.sell||0}`;card.appendChild(val);
+    if(_batchMode){const chk=mk('div','bi-chk');chk.textContent=_batchSel.has(it.uid)?'✅':'⬜';card.appendChild(chk);card.onclick=()=>{if(_batchSel.has(it.uid))_batchSel.delete(it.uid);else _batchSel.add(it.uid);ss('batch-cnt',_batchSel.size);openBag(_bagTab,-1);};}
+    else if(_ckIdx>=0){card.className+=' sel';card.onclick=()=>{const idx=G.bag.findIndex(x=>x.uid===it.uid);if(idx<0){hideOv('bag-ov');return;}G.bag.splice(idx,1);updBag();ckSlots[_ckIdx]={...it};_ckIdx=-1;hideOv('bag-ov');renderCookStation();};}
+    else{card.onclick=()=>bagAct(it);}
+    grid.appendChild(card);
+  });
+  const bb=$('bag-batch-bar');if(bb){bb.style.display=_batchMode?'flex':'none';ss('batch-cnt',_batchSel.size);}
+  showOv('bag-ov');
+}
+function batchSelectAll(){
+  const items=G.bag.filter(it=>{if(_bagTab==='all')return true;if(_bagTab==='raw')return it.cat==='raw';if(_bagTab==='food')return it.cat==='food';if(_bagTab==='special')return it.cat==='special'||it.cat==='legend';return true;});
+  const allSelected=items.every(it=>_batchSel.has(it.uid));
+  if(allSelected)items.forEach(it=>_batchSel.delete(it.uid));else items.forEach(it=>_batchSel.add(it.uid));
+  ss('batch-cnt',_batchSel.size);openBag(_bagTab,-1);
+}
+function confirmBatch(){
+  let tot=0,cnt=0;Array.from(_batchSel).forEach(uid2=>{const idx=G.bag.findIndex(x=>x.uid===uid2);if(idx>=0){const it=G.bag.splice(idx,1)[0];tot+=PRODS[it.id]?.sell||it.sell||10;cnt++;}});
+  G.gold+=tot;G.totalEarn+=tot;_batchMode=false;_batchSel=new Set();
+  SFX.buy();toast(`💰 賣出${cnt}件 +$${tot}`);updTask('earn',tot);chkAch();hideOv('bag-ov');updBag();autoSave();
+}
+function cancelBatch(){_batchMode=false;_batchSel=new Set();openBag(_bagTab,-1);}
+function bagAct(it){
+  gpop(`${it.e||EMOJI[it.id]||'🍽️'} ${it.n}`,[
+    {label:`💰 售出 $${PRODS[it.id]?.sell||it.sell||10}`,fn:()=>{const idx=G.bag.findIndex(x=>x.uid===it.uid);if(idx>=0)G.bag.splice(idx,1);const p=PRODS[it.id]?.sell||it.sell||10;G.gold+=p;G.totalEarn+=p;SFX.buy();toast(`+$${p}`);hideOv('gpop');updTask('earn',p);chkAch();openBag(_bagTab);updBag();autoSave();}},
+    {label:'🍳 加入烹飪台',fn:()=>{hideOv('gpop');const si=!ckSlots[0]?0:!ckSlots[1]?1:-1;if(si<0){toast('烹飪台已滿');return;}const idx=G.bag.findIndex(x=>x.uid===it.uid);if(idx<0)return;G.bag.splice(idx,1);ckSlots[si]={...it};updBag();if(_curZone==='cook')renderCookStation();}},
+    {label:'🐾 餵食動物',fn:()=>{hideOv('gpop');openFeedSelect(it);}},
+  ]);
+}
+function openFeedSelect(it){
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  if(!pets.length){toast('牧場沒有動物');return;}
+  gpop('🍎 餵食哪隻？',pets.map(p=>{const sp=ANIMALS[p.species]||ANIMALS.sheep;return{label:`${sp.n} ${p.n}`,sub:`心情${Math.floor(p.mood)}%`,fn:()=>{const idx=G.bag.findIndex(x=>x.uid===it.uid);if(idx<0){hideOv('gpop');return;}G.bag.splice(idx,1);updBag();const pd=PRODS[it.id]||{mB:10};p.mood=Math.min(100,p.mood+(pd.mB||10));if(!p.feedLog)p.feedLog=[];p.feedLog.push(it.id);p.fruitsEaten=(p.fruitsEaten||0)+1;G.totalFeed++;const mut=checkMut(p);if(mut&&!p.pendingMut){p.pendingMut=mut;toast(`🌟 ${p.n}有了變化！繁育可能誕生${ANIMALS[mut]?.n}！`);}if(pd.mutB){const bv=pd.mutB.all||pd.mutB[p.species]||0;p.mutAcc=(p.mutAcc||0)+bv;}SFX.pet();updTask('feed1');chkAch();hideOv('gpop');if(_curZone==='ranch')renderRanch();autoSave();}};
+  }));
+}
+
+// ══════════════════════════════════════════════════
+// WHEEL & PET ACTIONS
+// ══════════════════════════════════════════════════
+let _wheelId=null;
+function openWheel(petId){
+  _wheelId=petId;
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  const p=pets.find(p=>p.id===petId);if(!p)return;
+  const sp=ANIMALS[p.species]||ANIMALS.sheep;
+  const wc=$('wctr');if(wc)wc.textContent=sp.n;
+  showOv('wov');
+}
+function wa(action){
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  const p=pets.find(p=>p.id===_wheelId);if(!p)return;
+  hideOv('wov');
+  if(action==='feed'){if(!G.bag.length){toast('背包空的！先去農場種植');return;}openBag('all');}
+  else if(action==='breed'){selBreed(p.id);}
+  else if(action==='pet'){p.mood=Math.min(100,p.mood+14);SFX.pet();
+    const el=pEls[p.id];if(el){const em=mk('div','pemo');em.textContent='💕';el.wrap.appendChild(em);setTimeout(()=>em.remove(),1600);}
+    updTask('pet1');chkAch();autoSave();if(_curZone==='ranch')renderRanch();}
+  else if(action==='trans'){
+    gpop('🔮 轉化 '+p.n,[
+      {label:`✨ 光晶突變（庫存${G.crystals.light}個）`,disabled:!G.crystals.light,fn:()=>{G.crystals.light--;p.g=mutG(p.g,.35);G.lightOn=false;p.rarity=calcR(p.g);regCodex(p);SFX.breed();hideOv('gpop');if(_curZone==='ranch')renderRanch();if(_curZone==='crystal')renderCrystal();autoSave();}},
+      {label:`🔥 火晶提升（庫存${G.crystals.fire}個）`,disabled:!G.crystals.fire,fn:()=>{G.crystals.fire--;if(Math.random()<.3){p.rarity=Math.min(4,p.rarity+1);SFX.breed();}hideOv('gpop');autoSave();}},
+    ]);
+  }else if(action==='bye'){
+    gpop(`💫 告別 ${p.n}`,[{label:`放歸自然 → 肉塊×${1+p.rarity}`,fn:()=>{const m=1+p.rarity;for(let j=0;j<m;j++)G.bag.push({id:'meat',n:'肉塊',e:'🥩',col:'#a03018',sell:60,cat:'raw',uid:uid()});const area=G.ranches[G.ranchI]||G.ranches[0];area.pets=area.pets.filter(x=>x.id!==p.id);if(pEls[p.id]){pEls[p.id].wrap.remove();delete pEls[p.id];}SFX.bye();updBag();hideOv('gpop');if(_curZone==='ranch')renderRanch();autoSave();}}]);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// BREED
+// ══════════════════════════════════════════════════
+let _bA=null,_bB=null;
+function selBreed(id){
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  const p=pets.find(p=>p.id===id);if(!p)return;
+  if(!_bA){_bA=id;toast(`已選 ${p.n}，再點另一隻完成配對`);}
+  else if(id===_bA){_bA=null;toast('取消');}
+  else{_bB=id;doBreed();}
+}
+function openBreedPick(){
+  const pets=(G.ranches[G.ranchI]||G.ranches[0]).pets||[];
+  const avail=pets.filter(p=>!p.isBreeding);
+  if(!avail.length){toast('沒有可繁育的動物');return;}
+  gpop('💕 選擇繁育對象',avail.map(p=>{const sp=ANIMALS[p.species]||ANIMALS.sheep;return{label:`${sp.n} ${p.n}`,sub:`${RAR_N[p.rarity]}・心情${Math.floor(p.mood)}%`,fn:()=>{selBreed(p.id);hideOv('gpop');}};}));
+}
+function doBreed(){
+  const area=G.ranches[G.ranchI]||G.ranches[0];
+  const pA=area.pets?.find(p=>p.id===_bA),pB=area.pets?.find(p=>p.id===_bB);
+  _bA=null;_bB=null;
+  if(!pA||!pB||pA.isBreeding||pB.isBreeding){toast('無法繁育');return;}
+  if(area.pets.length>=G.cap){toast('牧場已滿');return;}
+  let dur=30000*(1.5-((pA.mood+pB.mood)/200)*.5);
+  if(G.crystals.dew>0){G.crystals.dew--;dur*=.6;toast('💧 露晶加速！');}
+  pA.isBreeding=true;pB.isBreeding=true;
+  G.bSlots.push({pA:pA.id,pB:pB.id,fin:Date.now()+dur,nA:pA.n,nB:pB.n,start:Date.now(),mb:(pA.mutAcc||0)+(pB.mutAcc||0),pmA:pA.pendingMut,pmB:pB.pendingMut,rI:G.ranchI});
+  toast(`🥚 ${pA.n}×${pB.n} 開始繁育！`);SFX.breed();autoSave();
+}
+function completeBreed(slot){
+  const area=G.ranches[slot.rI]||G.ranches[0];
+  const pA=area.pets?.find(p=>p.id===slot.pA),pB=area.pets?.find(p=>p.id===slot.pB);
+  if(!pA||!pB)return;pA.isBreeding=false;pB.isBreeding=false;
+  if(area.pets.length>=G.cap){toast('牧場滿！後代消失');return;}
+  let childSp;
+  if(slot.pmA&&Math.random()<.65)childSp=slot.pmA;
+  else if(slot.pmB&&Math.random()<.65)childSp=slot.pmB;
+  else if(Math.random()<.025)childSp='divine_dragon';
+  else childSp=Math.random()<.5?pA.species:pB.species;
+  const sp=ANIMALS[childSp]||ANIMALS.sheep;
+  const child=makePet(childSp,pA,pB);
+  let g=mutG({...child.g},slot.mb||0);
+  if(sp.cols)g.color=sp.cols[Math.floor(Math.random()*sp.cols.length)];
+  if(G.lightOn){g=mutG(g,.35);G.lightOn=false;}
+  child.g={...g,species:childSp};child.rarity=calcR(child.g);child.n=sp.n+'兒';
+  pA.mutAcc=0;pB.mutAcc=0;pA.feedLog=[];pB.feedLog=[];pA.pendingMut=null;pB.pendingMut=null;
+  area.pets.push(child);G.totalBreed++;regCodex(child);SFX.breed();
+  const isMut=sp.t!=='basic';
+  toast(`✨${isMut?'🌟':''}${child.n}誕生！（${RAR_N[child.rarity]}）`);
+  if(isMut)showAchToast({ico:'🌟',n:`發現${sp.n}！`});
+  updTask('breed1');chkAch();if(_curZone==='ranch')renderRanch();autoSave();
+}
+function openBuyPet(){
+  const area=G.ranches[G.ranchI]||G.ranches[0];
+  if(area.pets.length>=G.cap){toast('牧場已滿');return;}
+  gpop('🐾 購入動物',Object.entries(ANIMALS).filter(([k,v])=>!v.secret&&v.t==='basic').map(([spId,sp])=>({
+    label:`${sp.n}`,sub:`$${sp.p||80}`,fn:()=>{if(G.gold<(sp.p||80)){toast('金幣不足');hideOv('gpop');return;}G.gold-=(sp.p||80);const pet=makePet(spId);pet.n=sp.n+'兒';area.pets.push(pet);regCodex(pet);SFX.buy();toast(`${sp.n}加入！`);hideOv('gpop');if(_curZone==='ranch')renderRanch();autoSave();}
+  })));
+}
+function doRanchExpand(){
+  if(G.ranches.length<3){const cost=1000;if(G.gold<cost){toast(`金幣不足（需$${cost}）`);SFX.err();return;}G.gold-=cost;G.ranches.push({pets:[],id:G.ranches.length});G.ranchI=G.ranches.length-1;G.cap=4;toast('🏗 牧場2區！');SFX.buy();}
+  else toast('牧場已最大');if(_curZone==='ranch')renderRanch();autoSave();
+}
+
+// ══════════════════════════════════════════════════
+// CODEX, ACH, TASKS
+// ══════════════════════════════════════════════════
+function renderCdx(){
+  const grid=$('cdxgrid');if(!grid)return;grid.innerHTML='';
+  ss('cdxprog',`${G.codex.length}/${Object.keys(ANIMALS).length} 種`);
+  [...G.codex].sort((a,b)=>b.rarity-a.rarity).forEach(c=>{
+    const sp=ANIMALS[c.species]||ANIMALS.sheep;
+    const item=mk('div','cdxe');
+    const cv2=document.createElement('canvas');
+    drawPet(cv2,c.g,'idle',0,false,28);
+    cv2.style.cssText='width:46px;height:55px;image-rendering:pixelated;display:block;margin:0 auto 3px';
+    item.appendChild(cv2);
+    const nm=mk('div','');nm.style.cssText='font-size:10px;font-weight:800;color:#6a4a20;text-align:center';nm.textContent=c.n;item.appendChild(nm);
+    item.style.borderColor=RAR_C[c.rarity];
+    item.onclick=()=>{const cv3=document.createElement('canvas');drawPet(cv3,c.g,'idle',0,false,50);cv3.style.cssText='width:86px;height:103px;image-rendering:pixelated;display:block;margin:8px auto';gpop(c.n,[{label:`${RAR_N[c.rarity]} | ${sp.desc}`,fn:()=>{}},{label:'確認',fn:()=>hideOv('gpop')}]);$('gpc').prepend(cv3);};
+    grid.appendChild(item);
+  });
+}
+const ACHS=[
+  {id:'fp',n:'第一隻夥伴',ico:'🐾',rwd:50,chk:()=>G.ranches.some(a=>a.pets?.length>=1)},
+  {id:'fb',n:'初次繁育',ico:'💕',rwd:100,chk:()=>G.totalBreed>=1},
+  {id:'fm',n:'變異誕生',ico:'🌟',rwd:300,chk:()=>G.ranches.some(a=>a.pets?.some(p=>ANIMALS[p.species]?.t==='mutant'))},
+  {id:'fr',n:'稀有降臨',ico:'💜',rwd:800,chk:()=>G.ranches.some(a=>a.pets?.some(p=>p.rarity>=2))},
+  {id:'fd',n:'神獸誕生！',ico:'🐉',rwd:5000,chk:()=>G.ranches.some(a=>a.pets?.some(p=>p.species==='divine_dragon'))},
+  {id:'fh',n:'豐收農夫',ico:'🌾',rwd:150,chk:()=>G.totalHarvest>=10},
+  {id:'fc',n:'美食大廚',ico:'👨‍🍳',rwd:200,chk:()=>G.totalCook>=10},
+  {id:'fx',n:'圖鑑學者',ico:'📖',rwd:300,chk:()=>G.codex.length>=5},
+  {id:'ff',n:'餵食達人',ico:'🍎',rwd:200,chk:()=>G.totalFeed>=20},
+  {id:'frc',n:'食譜大師',ico:'📜',rwd:500,chk:()=>G.foundRec.size>=8},
+  {id:'fcs',n:'晶石收藏',ico:'💎',rwd:300,chk:()=>Object.values(G.crystals).reduce((a,b)=>a+b,0)>=10},
+  {id:'fl',n:'傳說料理師',ico:'🌈',rwd:2000,chk:()=>G.bag.some(it=>it.id==='legend_feast')},
+];
+function chkAch(){for(const a of ACHS){if(!G.ach.includes(a.id)&&a.chk()){G.ach.push(a.id);G.gold+=a.rwd;showAchToast(a);toast(`🏆 ${a.n} +$${a.rwd}`);SFX.ach();autoSave();}}}
+function showAchToast(a){const el=$('at');if(!el)return;$('at-ico').textContent=a.ico;$('at-nm').textContent=a.n;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500);}
+function renderAch(){const el=$('achlist');if(!el)return;el.innerHTML='';ACHS.forEach(a=>{const done=G.ach.includes(a.id);const item=mk('div','ai'+(done?' done':''));item.innerHTML=`<div style="font-size:22px">${done?a.ico:'❓'}</div><div style="flex:1"><div style="font-weight:900;font-size:13px">${done?a.n:'???'}</div><div style="font-size:11px;color:#8a6a30">${done?'已完成':'繼續探索'}</div></div><div style="font-size:12px;font-weight:800;color:#a07000">+$${a.rwd}</div>`;el.appendChild(item);});}
+const TDEFS=[
+  {id:'harvest3',txt:'收成3次',goal:3,rwd:{g:60},ico:'🌾'},
+  {id:'cook2',txt:'烹飪2道',goal:2,rwd:{g:50},ico:'🍳'},
+  {id:'dig1',txt:'挖掘1晶石',goal:1,rwd:{g:40,cs:'fire'},ico:'💎'},
+  {id:'breed1',txt:'完成1次繁育',goal:1,rwd:{g:80},ico:'💕'},
+  {id:'pet1',txt:'撫摸3次',goal:3,rwd:{g:40},ico:'✨'},
+  {id:'feed1',txt:'餵食2次',goal:2,rwd:{g:50,cs:'dew'},ico:'🍎'},
+  {id:'earn',txt:'賺200金幣',goal:200,rwd:{g:50},ico:'🪙'},
+];
+function initTasks(){const today=new Date().toDateString();if(new Date(G.lastReset||0).toDateString()!==today){G.tasks=[...TDEFS].sort(()=>Math.random()-.5).slice(0,3).map(t=>({...t,prog:0,done:false,claimed:false}));G.lastReset=Date.now();}}
+function updTask(id,amt=1){for(const t of G.tasks){if(t.id===id&&!t.claimed){t.prog=Math.min(t.goal,t.prog+amt);if(t.prog>=t.goal&&!t.done){t.done=true;toast(`📋 完成：${t.txt}！`);}}if(id==='earn'&&t.id==='earn'&&!t.claimed)t.prog=Math.min(t.goal,(t.prog||0)+amt);}}
+function renderTasks(){const el=$('tlist');if(!el)return;el.innerHTML='';G.tasks.forEach(t=>{const item=mk('div','trow'+(t.claimed?' done':''));const cc=t.rwd.cs?CRYSTALS[t.rwd.cs]:null;item.innerHTML=`<span style="font-size:18px">${t.claimed?'✅':t.done?'🎯':t.ico}</span><div style="flex:1"><div style="font-size:13px;font-weight:800;color:#3a2a08">${t.txt}</div><div style="font-size:11px;color:#8a6a30">${t.prog}/${t.goal}</div></div><span style="font-size:12px;font-weight:800;color:#a07000">+$${t.rwd.g||0}${cc?cc.e:''}</span>`;el.appendChild(item);});const un=G.tasks.some(t=>t.done&&!t.claimed);const btn=$('bclaim');if(btn)btn.style.display=un?'block':'none';}
+function claimTasks(){let tot=0;G.tasks.forEach(t=>{if(t.done&&!t.claimed){t.claimed=true;tot+=t.rwd.g||0;if(t.rwd.cs)G.crystals[t.rwd.cs]=(G.crystals[t.rwd.cs]||0)+1;}});if(tot>0){G.gold+=tot;toast(`🎁 +$${tot}`);SFX.ach();}renderTasks();autoSave();}
+function renderRecipes(){const el=$('rclist');if(!el)return;el.innerHTML='';RECIPES.forEach(r=>{const disc=G.foundRec.has(r.id);const out=PRODS[r.out];const card=mk('div','rc-card');if(!disc){card.innerHTML='<div style="font-size:13px;font-weight:800;color:#8a6a30">❓ 未知食譜 - 烹飪中發現！</div>';}else{card.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:22px">${EMOJI[r.out]||'🍽️'}</span><div><div style="font-size:14px;font-weight:900">${out?.n||r.out}</div><div style="font-size:11px;color:var(--gd)">售$${out?.sell||0}</div></div></div>`;const ing=mk('div','rc-ing');r.ing.forEach(i=>{const tag=mk('span','rc-tag');tag.textContent=PLANTS[i]?.n||PRODS[i]?.n||i;ing.appendChild(tag);});card.appendChild(ing);if(out?.feedSp){const h=mk('div','');h.style.cssText='font-size:11px;color:var(--pu);font-weight:700;margin-top:4px';h.textContent=`✨ 餵${out.feedSp==='all'?'任何動物':ANIMALS[out.feedSp]?.n||out.feedSp}→特殊效果！`;card.appendChild(h);}if(out?.mutKey){const h2=mk('div','');h2.style.cssText='font-size:11px;color:#e08830;font-weight:700';h2.textContent=`🌟 可解鎖：${ANIMALS[out.mutKey]?.n}`;card.appendChild(h2);}}el.appendChild(card);});}
+
+// ══════════════════════════════════════════════════
+// GENERIC POPUP & OVERLAY
+// ══════════════════════════════════════════════════
+function gpop(title,items){
+  ss('gpt',title);const c=$('gpc');c.innerHTML='';
+  items.forEach(it=>{const row=mk('div','gpr'+(it.disabled?' dis':''));const info=mk('div','');info.style.cssText='flex:1';const nm=mk('div','');nm.style.cssText='font-size:14px;font-weight:800;color:#3a2a08';nm.textContent=it.label;info.appendChild(nm);if(it.sub){const s=mk('div','');s.style.cssText='font-size:12px;color:#8a6a30;margin-top:2px';s.textContent=it.sub;info.appendChild(s);}row.appendChild(info);if(!it.disabled)row.onclick=it.fn;c.appendChild(row);});
+  showOv('gpop');
+}
+function showOv(id){
+  if(id==='ach-ov')renderAch();if(id==='cdx-ov')renderCdx();
+  if(id==='task-ov')renderTasks();if(id==='recipe-ov')renderRecipes();
+  $(id)?.classList.add('open');
+}
+function hideOv(id){$(id)?.classList.remove('open');}
+
+// ══════════════════════════════════════════════════
+// GAME TICK
+// ══════════════════════════════════════════════════
+let _lastTick=Date.now(),_natTimer=0;
+function tick(){
+  const now=Date.now(),dt=(now-_lastTick)/1000;_lastTick=now;rFrame++;
+  G.ranches.forEach(a=>(a.pets||[]).forEach(p=>{if(!p.isBreeding)p.mood=Math.max(0,p.mood-dt*.35);}));
+  G.bSlots=G.bSlots.filter(s=>{if(now>=s.fin){completeBreed(s);return false;}return true;});
+  _natTimer+=dt;
+  if(_natTimer>=60){_natTimer=0;
+    G.ranches.forEach((area,ai)=>{
+      const avail=(area.pets||[]).filter(p=>!p.isBreeding&&p.mood>=80);
+      if(avail.length>=2&&area.pets.length<G.cap){
+        avail.sort(()=>Math.random()-.5);const[pA,pB]=[avail[0],avail[1]];
+        pA.isBreeding=true;pB.isBreeding=true;
+        G.bSlots.push({pA:pA.id,pB:pB.id,fin:now+18000,nA:pA.n,nB:pB.n,start:now,mb:0,pmA:pA.pendingMut,pmB:pB.pendingMut,rI:ai,auto:true});
+        if(ai===G.ranchI)toast(`💕 ${pA.n}×${pB.n} 自然配對！`);autoSave();
+      }
+    });
+  }
+  G.xtals.forEach((a,ai)=>{(a.nodes||[]).forEach(n=>{if(now>n.maxRdy)n.rdy=now+60000;});while((a.nodes||[]).length<6)spawnNode(ai);});
+  G.cooks.forEach(area=>{(area.queue||[]).forEach(q=>{if(now>=q.fin&&!q._notified){q._notified=true;toast(`✨ ${PRODS[q.out]?.n||q.out}完成！`);}});});
+  // update UI
+  ss('sg',G.gold);updBag();
+  if(_curZone==='ranch')renderRanch();
+  if(_curZone==='farm')renderFarm();
+  if(_curZone==='cook')renderCookStation();
+  if(_curZone==='crystal')renderCrystal();
+  updateOverviewHints();
+}
+setInterval(tick,2000);
+
+// ══════════════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════════════
+function saveGame(){
+  const s={...G,foundRec:Array.from(G.foundRec)};
+  localStorage.setItem('pt_mobile_v1',JSON.stringify(s));toast('💾 存檔');
+}
+function loadGame(){
+  try{const r=localStorage.getItem('pt_mobile_v1');if(!r)return false;
+    const s=JSON.parse(r);s.foundRec=new Set(s.foundRec||[]);Object.assign(G,s);return true;
+  }catch(e){return false;}
+}
+let _autoT=null;function autoSave(){if(_autoT)clearTimeout(_autoT);_autoT=setTimeout(saveGame,4000);}
+setInterval(saveGame,90000);
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function newGame(){
+  G={gold:5000,
+    farms:[{slots:[null,null,null,null],id:0}],farmI:0,
+    ranches:[{pets:[],id:0}],ranchI:0,
+    cooks:[{queue:[],maxQ:5,id:0}],cookI:0,
+    xtals:[{nodes:[],type:'mixed',id:0}],xtalI:0,
+    cap:4,bag:[],crystals:{fire:0,dew:0,light:0},lightOn:false,
+    codex:[],ach:[],tasks:[],lastReset:0,bSlots:[],
+    totalBreed:0,totalHarvest:0,totalCook:0,totalEarn:0,totalFeed:0,
+    foundRec:new Set(['ra','rb','rmt'])};
+  ['sheep','rabbit'].forEach(spId=>{
+    const pet=makePet(spId);pet.n={sheep:'小白',rabbit:'小棕'}[spId];
+    if(spId==='sheep')pet.g.color='white';else pet.g.color='brown';
+    G.ranches[0].pets.push(pet);regCodex(pet);
+  });
+  initXtals();
+}
+
+window.addEventListener('load',()=>{
+  if(!loadGame())newGame();
+  else{
+    if(!(G.foundRec instanceof Set))G.foundRec=new Set(G.foundRec||[]);
+    G.ranches=G.ranches||[{pets:[],id:0}];G.farms=G.farms||[{slots:[null,null,null,null],id:0}];
+    G.cooks=G.cooks||[{queue:[],maxQ:5,id:0}];G.xtals=G.xtals||[{nodes:[],type:'mixed',id:0}];
+    G.bag=G.bag||[];G.crystals=G.crystals||{fire:0,dew:0,light:0};G.bSlots=G.bSlots||[];
+    G.cooks.forEach(c=>{if(!c.maxQ)c.maxQ=5;});
+    initXtals();
+  }
+  initTasks();chkAch();
+  ss('sg',G.gold);updBag();
+  updateOverviewHints();
+  toast(localStorage.getItem('pt_mobile_v1')?'📂 歡迎回來！':'🌿 牧野物語開始！');
+});
+window.addEventListener('beforeunload',saveGame);
+</script>
+</body>
+</html>
