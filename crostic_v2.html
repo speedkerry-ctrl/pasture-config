@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Crostic Cipher</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap');
+
+/* ══ RESET & BASE ══════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow-x:hidden}
+body{
+  font-family:'Nunito',sans-serif;
+  background:#0f0e1a;
+  color:#f0eeff;
+  min-height:100vh;
+  overscroll-behavior:none;
+}
+
+/* ══ STAR FIELD BG ═════════════════════════════════ */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% -10%,#2d1b6b 0%,transparent 65%),
+    radial-gradient(ellipse 80% 50% at 80% 100%,#1a0d4a 0%,transparent 60%),
+    #0f0e1a;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%,rgba(255,255,255,0.7) 0%,transparent 100%),
+    radial-gradient(1px 1px at 38% 9%,rgba(255,255,255,0.5) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 22%,rgba(255,255,255,0.8) 0%,transparent 100%),
+    radial-gradient(1px 1px at 82% 14%,rgba(255,255,255,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 22% 55%,rgba(255,255,255,0.5) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 74% 48%,rgba(255,255,255,0.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 48% 72%,rgba(255,255,255,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 91% 38%,rgba(255,255,255,0.5) 0%,transparent 100%),
+    radial-gradient(2px 2px at 6% 85%,rgba(255,255,255,0.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 90%,rgba(255,255,255,0.4) 0%,transparent 100%);
+}
+
+/* ══ SCREENS ════════════════════════════════════════ */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;flex-direction:column;align-items:center}
+.screen.active{display:flex}
+
+/* ══════════════════════════════════════════════════
+   HOME / LANDING SCREEN
+══════════════════════════════════════════════════ */
+#screen-home{
+  justify-content:center;padding:24px 20px 40px;
+  background:transparent;
+}
+.home-logo{
+  font-family:'Fredoka One',cursive;
+  font-size:3.2rem;
+  background:linear-gradient(135deg,#a78bfa,#f0abfc,#fbbf24);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-align:center;margin-bottom:4px;
+  filter:drop-shadow(0 0 20px rgba(167,139,250,0.4));
+}
+.home-sub{
+  text-align:center;font-size:0.9rem;color:rgba(240,238,255,0.6);
+  margin-bottom:48px;letter-spacing:2px;text-transform:uppercase;font-weight:700;
+}
+.home-cards{display:flex;flex-direction:column;gap:16px;width:100%;max-width:380px;margin-bottom:40px;}
+.home-card{
+  position:relative;border-radius:20px;padding:20px 22px;
+  cursor:pointer;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.1);
+  transition:transform 0.2s,box-shadow 0.2s;
+  user-select:none;
+}
+.home-card:active{transform:scale(0.97)}
+.hc-kids{background:linear-gradient(135deg,#ec4899,#f97316);box-shadow:0 8px 32px rgba(236,72,153,0.35);}
+.hc-b1b2{background:linear-gradient(135deg,#6366f1,#8b5cf6);box-shadow:0 8px 32px rgba(99,102,241,0.35);}
+.hc-c1  {background:linear-gradient(135deg,#0ea5e9,#06b6d4);box-shadow:0 8px 32px rgba(14,165,233,0.35);}
+.home-card:hover{transform:translateY(-3px) scale(1.01);}
+.hc-badge{
+  position:absolute;top:14px;right:14px;
+  background:rgba(255,255,255,0.25);border-radius:20px;
+  padding:3px 10px;font-size:0.65rem;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;color:#fff;
+}
+.hc-emoji{font-size:2.4rem;margin-bottom:8px;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.3));}
+.hc-title{font-family:'Fredoka One',cursive;font-size:1.6rem;color:#fff;margin-bottom:4px;}
+.hc-desc{font-size:0.82rem;color:rgba(255,255,255,0.8);line-height:1.5;}
+.hc-progress{
+  margin-top:12px;display:flex;align-items:center;gap:8px;
+}
+.hc-prog-bar{flex:1;height:5px;background:rgba(255,255,255,0.25);border-radius:3px;overflow:hidden;}
+.hc-prog-fill{height:100%;background:#fff;border-radius:3px;transition:width 0.5s ease;}
+.hc-prog-text{font-size:0.72rem;font-weight:800;color:rgba(255,255,255,0.85);white-space:nowrap;}
+
+.home-gems{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,215,0,0.3);
+  border-radius:30px;padding:10px 20px;
+  font-weight:800;font-size:1rem;
+  color:#fbbf24;
+  box-shadow:0 0 20px rgba(251,191,36,0.15);
+}
+
+/* ══════════════════════════════════════════════════
+   LEVEL MAP SCREEN
+══════════════════════════════════════════════════ */
+#screen-map{padding:0;background:transparent;}
+.map-nav{
+  width:100%;max-width:560px;
+  display:flex;align-items:center;gap:12px;
+  padding:16px 16px 0;
+}
+.nav-back-btn{
+  width:42px;height:42px;border-radius:14px;
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;cursor:pointer;flex-shrink:0;
+  transition:all 0.15s;
+}
+.nav-back-btn:hover{background:rgba(255,255,255,0.18);}
+.map-mode-title{
+  font-family:'Fredoka One',cursive;font-size:1.5rem;
+  flex:1;
+}
+.map-gems-badge{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.3);
+  border-radius:20px;padding:6px 13px;
+  font-weight:800;font-size:0.85rem;color:#fbbf24;
+}
+
+.map-section{width:100%;max-width:560px;padding:20px 16px 40px;}
+.map-section-label{
+  font-size:0.65rem;font-weight:800;letter-spacing:2px;
+  text-transform:uppercase;color:rgba(240,238,255,0.45);
+  margin-bottom:14px;margin-top:24px;
+}
+.map-section-label:first-child{margin-top:0;}
+
+.levels-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+}
+.lmap-card{
+  position:relative;border-radius:18px;padding:16px;
+  cursor:pointer;overflow:hidden;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  transition:all 0.18s;
+}
+.lmap-card:hover{background:rgba(255,255,255,0.1);transform:translateY(-2px);}
+.lmap-card:active{transform:scale(0.97);}
+.lmap-card.completed{border-color:rgba(167,139,250,0.4);background:rgba(167,139,250,0.08);}
+.lmap-card.locked{opacity:0.4;cursor:not-allowed;}
+.lmap-card.locked:hover{transform:none;background:rgba(255,255,255,0.06);}
+.lmc-num{font-size:0.62rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(240,238,255,0.45);margin-bottom:5px;}
+.lmc-title{font-family:'Fredoka One',cursive;font-size:1.1rem;color:#f0eeff;margin-bottom:3px;}
+.lmc-theme{font-size:0.7rem;color:rgba(240,238,255,0.5);margin-bottom:10px;}
+.lmc-stars{font-size:0.88rem;letter-spacing:1px;}
+.lmc-lock{position:absolute;top:12px;right:12px;font-size:1rem;opacity:0.6;}
+.lmc-done-badge{
+  position:absolute;top:10px;right:10px;
+  background:rgba(167,139,250,0.3);border-radius:20px;
+  padding:2px 8px;font-size:0.6rem;font-weight:800;
+  color:#c4b5fd;letter-spacing:1px;text-transform:uppercase;
+}
+
+/* ══════════════════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════════════════ */
+#screen-game{padding:0;}
+
+.game-topbar{
+  width:100%;position:sticky;top:0;z-index:50;
+  background:rgba(15,14,26,0.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  padding:12px 16px;
+}
+.game-topbar-inner{
+  max-width:600px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.gtb-left{display:flex;align-items:center;gap:10px;}
+.gtb-back{
+  width:38px;height:38px;border-radius:12px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;cursor:pointer;transition:all 0.15s;
+}
+.gtb-back:hover{background:rgba(255,255,255,0.15);}
+.gtb-title{font-family:'Fredoka One',cursive;font-size:1.05rem;color:#f0eeff;}
+.gtb-subtitle{font-size:0.65rem;color:rgba(240,238,255,0.45);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.gtb-right{display:flex;align-items:center;gap:8px;}
+.gems-pill{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.25);
+  border-radius:20px;padding:5px 11px;
+  font-weight:800;font-size:0.82rem;color:#fbbf24;
+}
+.hint-pill{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);
+  border-radius:20px;padding:6px 13px;
+  font-weight:800;font-size:0.78rem;color:#c4b5fd;
+  cursor:pointer;transition:all 0.15s;
+}
+.hint-pill:hover{background:rgba(167,139,250,0.25);}
+
+/* Progress */
+.prog-row{
+  width:100%;max-width:600px;margin:0 auto;
+  padding:8px 16px 0;
+}
+.prog-track{width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+.prog-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,#a78bfa,#f0abfc);
+  transition:width 0.4s cubic-bezier(.4,1,.6,1);
+  box-shadow:0 0 8px rgba(167,139,250,0.5);
+}
+.prog-label{text-align:right;font-size:0.62rem;font-weight:700;color:rgba(240,238,255,0.4);margin-top:3px;}
+
+/* Quote section */
+.quote-area{
+  width:100%;max-width:600px;margin:0 auto;
+  padding:14px 16px 10px;
+}
+.section-label{
+  font-size:0.6rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(240,238,255,0.35);margin-bottom:10px;
+}
+.quote-card{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:16px;padding:16px 14px;
+}
+.quote-words{display:flex;flex-wrap:wrap;gap:8px 10px;line-height:1;}
+.quote-word{display:flex;gap:2px;flex-wrap:nowrap;}
+.q-cell{display:flex;flex-direction:column;align-items:center;width:20px;}
+.q-letter{
+  width:20px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;font-weight:800;font-family:'Fredoka One',cursive;
+  color:#f0eeff;
+  border-bottom:2px solid rgba(255,255,255,0.15);
+  transition:all 0.2s;text-transform:uppercase;
+}
+.q-letter.q-filled{color:#a78bfa;border-color:#a78bfa;}
+.q-letter.q-correct{color:#4ade80;border-color:#4ade80;}
+.q-letter.q-highlighted{background:rgba(167,139,250,0.15);border-radius:4px 4px 0 0;}
+.q-num{font-size:0.48rem;color:rgba(240,238,255,0.35);margin-top:2px;font-weight:700;}
+.quote-source{
+  margin-top:12px;text-align:right;
+  font-size:0.7rem;color:rgba(240,238,255,0.4);
+  font-style:italic;font-weight:600;
+}
+
+/* Clue words */
+.clues-area{
+  width:100%;max-width:600px;margin:0 auto;
+  padding:0 16px 16px;flex:1;
+}
+.clues-list{display:flex;flex-direction:column;gap:10px;}
+.clue-card{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:12px 14px;
+  cursor:pointer;transition:all 0.15s;
+}
+.clue-card:hover{background:rgba(255,255,255,0.08);}
+.clue-card.cc-active{
+  border-color:rgba(167,139,250,0.5);
+  background:rgba(167,139,250,0.08);
+  box-shadow:0 0 0 2px rgba(167,139,250,0.15);
+}
+.clue-card.cc-solved{border-color:rgba(74,222,128,0.3);background:rgba(74,222,128,0.05);}
+.clue-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.clue-badge{
+  width:30px;height:30px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fredoka One',cursive;font-size:0.95rem;font-weight:700;
+  background:rgba(167,139,250,0.25);color:#c4b5fd;
+}
+.clue-card.cc-solved .clue-badge{background:rgba(74,222,128,0.2);color:#4ade80;}
+.clue-hint{
+  flex:1;font-size:0.78rem;color:rgba(240,238,255,0.6);
+  line-height:1.4;font-weight:600;
+}
+.clue-cells{display:flex;gap:4px;flex-wrap:wrap;}
+.c-cell{
+  width:40px;height:46px;border-radius:10px;
+  background:rgba(255,255,255,0.06);
+  border:1.5px solid rgba(255,255,255,0.12);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:4px;position:relative;cursor:pointer;
+  transition:all 0.12s;
+}
+.c-cell:hover{border-color:rgba(167,139,250,0.4);}
+.c-cell.cc-active-cell{
+  border-color:#a78bfa;
+  background:rgba(167,139,250,0.15);
+  box-shadow:0 0 0 3px rgba(167,139,250,0.2);
+  transform:translateY(-2px);
+}
+.c-cell.cc-highlight{background:rgba(167,139,250,0.08);border-color:rgba(167,139,250,0.3);}
+.c-cell.cc-correct{border-color:rgba(74,222,128,0.4);background:rgba(74,222,128,0.08);}
+.c-cell.cc-correct .cc-letter{color:#4ade80;}
+.c-cell.cc-error{border-color:rgba(248,113,113,0.5);background:rgba(248,113,113,0.1);animation:errorShake 0.3s ease;}
+@keyframes errorShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.cc-num{position:absolute;top:3px;left:4px;font-size:0.44rem;font-weight:800;color:rgba(240,238,255,0.3);}
+.cc-letter{
+  font-family:'Fredoka One',cursive;font-size:1.1rem;color:#f0eeff;
+  line-height:1;text-transform:uppercase;
+  transition:color 0.15s;
+}
+.cc-reveal{animation:revealCell 0.35s cubic-bezier(.4,1.3,.6,1);}
+@keyframes revealCell{0%{transform:scale(0.4) rotateY(90deg);opacity:0}60%{transform:scale(1.1) rotateY(0);opacity:1}100%{transform:scale(1)}}
+
+/* ══ KEYBOARD ══════════════════════════════════════ */
+.keyboard-area{
+  width:100%;max-width:600px;margin:0 auto;
+  padding:6px 8px 12px;
+  position:sticky;bottom:0;z-index:40;
+  background:linear-gradient(transparent,rgba(15,14,26,0.98) 20%);
+}
+.kb-row{display:flex;justify-content:center;gap:4px;margin-bottom:4px;}
+.kk{
+  height:48px;min-width:30px;flex:1;max-width:38px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#f0eeff;font-family:'Nunito',sans-serif;font-weight:800;
+  font-size:0.9rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.1s;
+  box-shadow:0 3px 0 rgba(0,0,0,0.4);
+  user-select:none;-webkit-user-select:none;position:relative;overflow:hidden;
+}
+.kk::after{
+  content:'';position:absolute;inset:0;
+  background:white;opacity:0;border-radius:10px;
+  transition:opacity 0.1s;
+}
+.kk:active::after,.kk.kk-pressed::after{opacity:0.15;}
+.kk:active,.kk.kk-pressed{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,0.4);}
+.kk.kk-action{
+  min-width:46px;background:rgba(255,255,255,0.06);
+  color:rgba(240,238,255,0.6);font-size:0.72rem;font-weight:800;
+}
+.kk.kk-used{background:rgba(255,255,255,0.04);color:rgba(240,238,255,0.25);}
+
+/* ══ MODALS ════════════════════════════════════════ */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center;
+}
+.modal-bg.show{display:flex;}
+.modal-sheet{
+  width:100%;max-width:480px;
+  background:linear-gradient(180deg,#1e1b3a,#16132e);
+  border-radius:28px 28px 0 0;
+  border-top:1px solid rgba(255,255,255,0.1);
+  padding:8px 20px 32px;
+  animation:slideUp 0.3s cubic-bezier(.4,1.2,.6,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{
+  width:40px;height:4px;border-radius:2px;
+  background:rgba(255,255,255,0.2);
+  margin:0 auto 20px;
+}
+.sheet-title{
+  font-family:'Fredoka One',cursive;font-size:1.4rem;
+  color:#f0eeff;margin-bottom:6px;
+}
+.sheet-sub{font-size:0.8rem;color:rgba(240,238,255,0.5);margin-bottom:20px;font-weight:600;}
+
+/* Hint options */
+.hint-opt{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;border-radius:16px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  cursor:pointer;margin-bottom:10px;
+  transition:all 0.15s;
+}
+.hint-opt:hover{background:rgba(255,255,255,0.1);}
+.hint-opt:active{transform:scale(0.98);}
+.ho-icon{
+  width:44px;height:44px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+}
+.ho-purple{background:rgba(167,139,250,0.2);}
+.ho-amber{background:rgba(251,191,36,0.15);}
+.ho-green{background:rgba(74,222,128,0.15);}
+.ho-blue{background:rgba(96,165,250,0.15);}
+.ho-body{flex:1;}
+.ho-title{font-weight:800;font-size:0.88rem;color:#f0eeff;margin-bottom:2px;}
+.ho-desc{font-size:0.72rem;color:rgba(240,238,255,0.45);line-height:1.4;}
+.ho-cost{font-size:0.72rem;font-weight:800;color:#fbbf24;flex-shrink:0;}
+
+/* Win modal — center */
+.modal-bg.center{align-items:center;padding:20px;}
+.modal-center-box{
+  width:100%;max-width:340px;
+  background:linear-gradient(145deg,#1e1b3a,#16132e);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:28px;padding:28px 22px;
+  text-align:center;
+  animation:popIn 0.35s cubic-bezier(.4,1.3,.6,1);
+}
+@keyframes popIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
+.win-emoji-big{font-size:4rem;display:block;margin-bottom:10px;animation:bounce 0.5s 0.3s cubic-bezier(.4,1.4,.6,1) both;}
+@keyframes bounce{from{transform:scale(0)}to{transform:scale(1)}}
+.win-title{font-family:'Fredoka One',cursive;font-size:1.8rem;color:#f0eeff;margin-bottom:6px;}
+.stars-row{display:flex;justify-content:center;gap:6px;margin:12px 0;}
+.star-item{font-size:2rem;filter:grayscale(1) brightness(0.4);transition:all 0.3s;}
+.star-item.lit{filter:none;animation:starBurst 0.4s cubic-bezier(.4,1.4,.6,1);}
+@keyframes starBurst{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+.gem-win-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.3);
+  border-radius:30px;padding:8px 20px;
+  font-weight:900;font-size:1.1rem;color:#fbbf24;
+  margin:10px 0 16px;
+  box-shadow:0 0 20px rgba(251,191,36,0.15);
+}
+.win-msg{font-size:0.82rem;color:rgba(240,238,255,0.55);margin-bottom:20px;line-height:1.6;font-weight:600;}
+.win-btns{display:flex;gap:10px;}
+.wbtn{
+  flex:1;padding:14px;border-radius:14px;border:none;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:0.88rem;
+  cursor:pointer;transition:all 0.15s;
+}
+.wbtn:active{transform:scale(0.97);}
+.wbtn-primary{
+  background:linear-gradient(135deg,#8b5cf6,#a78bfa);
+  color:#fff;box-shadow:0 4px 16px rgba(139,92,246,0.4);
+}
+.wbtn-secondary{background:rgba(255,255,255,0.08);color:rgba(240,238,255,0.7);border:1px solid rgba(255,255,255,0.1);}
+
+/* Quote reveal strip in win modal */
+.win-quote-strip{
+  background:rgba(255,255,255,0.04);border-radius:12px;
+  padding:12px 14px;margin-bottom:16px;
+  font-family:'Fredoka One',cursive;font-size:0.85rem;
+  color:rgba(240,238,255,0.7);line-height:1.6;
+  text-align:left;border:1px solid rgba(255,255,255,0.06);
+}
+.win-quote-author{font-size:0.72rem;color:rgba(240,238,255,0.4);font-style:italic;margin-top:4px;font-family:'Nunito',sans-serif;}
+
+/* ══ TOAST ══════════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:120px;left:50%;
+  transform:translateX(-50%) translateY(12px);
+  background:rgba(30,27,58,0.95);border:1px solid rgba(255,255,255,0.12);
+  color:#f0eeff;padding:10px 20px;border-radius:30px;
+  font-size:0.82rem;font-weight:700;
+  pointer-events:none;opacity:0;
+  transition:all 0.3s cubic-bezier(.4,1.2,.6,1);
+  z-index:999;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.toast-success{background:rgba(74,222,128,0.15);border-color:rgba(74,222,128,0.4);color:#4ade80;}
+#toast.toast-error{background:rgba(248,113,113,0.15);border-color:rgba(248,113,113,0.4);color:#f87171;}
+#toast.toast-hint{background:rgba(167,139,250,0.15);border-color:rgba(167,139,250,0.4);color:#c4b5fd;}
+
+/* ══ CONFETTI ═══════════════════════════════════════ */
+.confetti-wrap{position:fixed;inset:0;z-index:200;pointer-events:none;overflow:hidden;}
+.cp{position:absolute;border-radius:2px;animation:cpFall 3s ease-in forwards;}
+@keyframes cpFall{0%{transform:translateY(-20px) rotateZ(0);opacity:1}100%{transform:translateY(110vh) rotateZ(900deg);opacity:0}}
+
+/* ══ MISC ═══════════════════════════════════════════ */
+::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="confetti-wrap" id="confetti-wrap"></div>
+
+<!-- ══ HOME ══════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="home-logo">Crostic</div>
+  <div class="home-sub">Cipher Word Puzzle</div>
+  <div class="home-cards">
+    <div class="home-card hc-kids" onclick="openMap('kids')">
+      <div class="hc-badge">Age 5+</div>
+      <span class="hc-emoji">🌈</span>
+      <div class="hc-title">Kids</div>
+      <div class="hc-desc">Fun quotes with simple words. Perfect for beginners!</div>
+      <div class="hc-progress">
+        <div class="hc-prog-bar"><div class="hc-prog-fill" id="prog-kids" style="width:0%"></div></div>
+        <div class="hc-prog-text" id="prog-kids-txt">0/10</div>
+      </div>
+    </div>
+    <div class="home-card hc-b1b2" onclick="openMap('b1b2')">
+      <div class="hc-badge">B1–B2</div>
+      <span class="hc-emoji">🧩</span>
+      <div class="hc-title">Challenger</div>
+      <div class="hc-desc">Inspiring quotes with intermediate vocabulary.</div>
+      <div class="hc-progress">
+        <div class="hc-prog-bar"><div class="hc-prog-fill" id="prog-b1b2" style="width:0%"></div></div>
+        <div class="hc-prog-text" id="prog-b1b2-txt">0/10</div>
+      </div>
+    </div>
+    <div class="home-card hc-c1" onclick="openMap('c1')">
+      <div class="hc-badge">C1</div>
+      <span class="hc-emoji">🔮</span>
+      <div class="hc-title">Master</div>
+      <div class="hc-desc">Complex wisdom quotes for advanced players.</div>
+      <div class="hc-progress">
+        <div class="hc-prog-bar"><div class="hc-prog-fill" id="prog-c1" style="width:0%"></div></div>
+        <div class="hc-prog-text" id="prog-c1-txt">0/10</div>
+      </div>
+    </div>
+  </div>
+  <div class="home-gems">💎 <span id="home-gems">0</span> <span style="opacity:0.6;font-size:0.78rem;font-weight:700">gems</span></div>
+</div>
+
+<!-- ══ MAP ════════════════════════════════════════════ -->
+<div id="screen-map" class="screen">
+  <div class="map-nav" style="align-self:center;width:100%;">
+    <div class="nav-back-btn" onclick="goHome()">←</div>
+    <div class="map-mode-title" id="map-title">Kids</div>
+    <div class="map-gems-badge">💎 <span id="map-gems">0</span></div>
+  </div>
+  <div class="map-section">
+    <div class="map-section-label" id="map-label">Choose a puzzle</div>
+    <div class="levels-grid" id="levels-grid"></div>
+  </div>
+</div>
+
+<!-- ══ GAME ════════════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="game-topbar">
+    <div class="game-topbar-inner">
+      <div class="gtb-left">
+        <div class="gtb-back" onclick="goToMap()">←</div>
+        <div>
+          <div class="gtb-title" id="gtb-title">Puzzle</div>
+          <div class="gtb-subtitle" id="gtb-subtitle">Level 1</div>
+        </div>
+      </div>
+      <div class="gtb-right">
+        <div class="gems-pill">💎 <span id="nav-gems">0</span></div>
+        <div class="hint-pill" onclick="openHint()">💡 Hint</div>
+      </div>
+    </div>
+    <div class="prog-row">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <div class="prog-label" id="prog-label">0 / 0</div>
+    </div>
+  </div>
+
+  <div class="quote-area" style="align-self:center;">
+    <div class="section-label">🔐 Cipher Quote</div>
+    <div class="quote-card">
+      <div class="quote-words" id="quote-words"></div>
+      <div class="quote-source" id="quote-source"></div>
+    </div>
+  </div>
+
+  <div class="clues-area" style="align-self:center;">
+    <div class="section-label">📝 Clue Words</div>
+    <div class="clues-list" id="clues-list"></div>
+  </div>
+
+  <div class="keyboard-area" style="align-self:center;">
+    <div class="kb-row" id="kb-r1"></div>
+    <div class="kb-row" id="kb-r2"></div>
+    <div class="kb-row" id="kb-r3"></div>
+  </div>
+</div>
+
+<!-- ══ HINT SHEET ══════════════════════════════════════ -->
+<div class="modal-bg" id="hint-modal" onclick="closeHint(event)">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">💡 Get a Hint</div>
+    <div class="sheet-sub">Pick how you'd like help — some are free!</div>
+    <div class="hint-opt" onclick="hintRevealLetter()">
+      <div class="ho-icon ho-purple">🔍</div>
+      <div class="ho-body"><div class="ho-title">Reveal One Letter</div><div class="ho-desc">Reveal one correct letter in the selected word</div></div>
+      <span class="ho-cost">Free</span>
+    </div>
+    <div class="hint-opt" onclick="hintRevealWord()">
+      <div class="ho-icon ho-amber">✨</div>
+      <div class="ho-body"><div class="ho-title">Reveal Whole Word</div><div class="ho-desc">Reveal the entire selected clue word</div></div>
+      <span class="ho-cost">💎 5</span>
+    </div>
+    <div class="hint-opt" onclick="hintCheckErrors()">
+      <div class="ho-icon ho-green">🔎</div>
+      <div class="ho-body"><div class="ho-title">Check Errors</div><div class="ho-desc">Highlight any incorrect letters</div></div>
+      <span class="ho-cost">Free</span>
+    </div>
+    <div class="hint-opt" onclick="hintCipherKey()">
+      <div class="ho-icon ho-blue">🗝️</div>
+      <div class="ho-body"><div class="ho-title">Reveal Cipher Key</div><div class="ho-desc">Reveal one random number→letter mapping</div></div>
+      <span class="ho-cost">💎 3</span>
+    </div>
+    <div style="margin-top:4px;">
+      <div class="hint-opt" onclick="closeHint()" style="justify-content:center;background:rgba(255,255,255,0.04);">
+        <span style="color:rgba(240,238,255,0.5);font-weight:800;font-size:0.85rem;">Cancel</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WIN MODAL ══════════════════════════════════════ -->
+<div class="modal-bg center" id="win-modal">
+  <div class="modal-center-box">
+    <span class="win-emoji-big" id="win-emoji">🎉</span>
+    <div class="win-title" id="win-title">Puzzle Solved!</div>
+    <div class="stars-row">
+      <div class="star-item" id="s1">⭐</div>
+      <div class="star-item" id="s2">⭐</div>
+      <div class="star-item" id="s3">⭐</div>
+    </div>
+    <div class="gem-win-badge" id="win-gems-badge">+20 💎</div>
+    <div class="win-quote-strip" id="win-quote-strip"></div>
+    <div class="win-msg" id="win-msg"></div>
+    <div class="win-btns">
+      <button class="wbtn wbtn-secondary" onclick="goToMap()">🗺 Map</button>
+      <button class="wbtn wbtn-primary" id="next-btn" onclick="nextLevel()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ══════════════════════════════════════════════════════════
+let _ctx = null;
+function ac() {
+  if (!_ctx) { try { _ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
+  if (_ctx && _ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
+function tone(freq, type, dur, vol=0.12, delay=0) {
+  const a = ac(); if (!a) return;
+  try {
+    const o = a.createOscillator(), g = a.createGain();
+    o.connect(g); g.connect(a.destination);
+    o.type = type; o.frequency.setValueAtTime(freq, a.currentTime + delay);
+    g.gain.setValueAtTime(0, a.currentTime + delay);
+    g.gain.linearRampToValueAtTime(vol, a.currentTime + delay + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + delay + dur);
+    o.start(a.currentTime + delay); o.stop(a.currentTime + delay + dur + 0.01);
+  } catch(e) {}
+}
+// Sound library
+function sfxTap()    { tone(900,'sine',0.05,0.08); }
+function sfxClick()  { tone(780,'sine',0.06,0.1); }
+function sfxCorrect(){ tone(523,'sine',0.08,0.1); tone(659,'sine',0.08,0.1,0.08); tone(784,'sine',0.1,0.1,0.17); }
+function sfxWrong()  { tone(220,'sawtooth',0.12,0.1); tone(180,'sawtooth',0.1,0.08,0.1); }
+function sfxReveal() { tone(660,'sine',0.06,0.08); tone(880,'sine',0.06,0.07,0.07); }
+function sfxHint()   { tone(440,'triangle',0.08,0.09); tone(554,'triangle',0.08,0.08,0.09); }
+function sfxWin() {
+  const notes = [523,659,784,1046,1318];
+  notes.forEach((n,i) => tone(n,'sine',0.25,0.15,i*0.1));
+}
+function sfxOpen()   { tone(440,'sine',0.06,0.07); tone(554,'sine',0.05,0.06,0.06); }
+function sfxLevelUp(){
+  [392,494,587,740,880].forEach((n,i) => tone(n,'triangle',0.2,0.12,i*0.07));
+}
+['click','touchstart'].forEach(e => document.addEventListener(e, ()=>ac(), {once:true,passive:true}));
+
+// ══════════════════════════════════════════════════════════
+// LEVEL DATA — Kids, B1-B2, C1 (10 each)
+// ══════════════════════════════════════════════════════════
+const ALL_LEVELS = {
+kids: [
+  {id:1,title:"Be Kind",theme:"Kindness",quote:"BE KIND TO YOURSELF AND OTHERS",source:"— Unknown",
+   clues:[{l:"A",h:"To show warmth and care",a:"KIND"},{l:"B",h:"Plus, in addition",a:"AND"},{l:"C",h:"Other people",a:"OTHERS"},{l:"D",h:"Belonging to you",a:"YOURSELF"}]},
+  {id:2,title:"Smile",theme:"Happiness",quote:"A SMILE CAN MAKE YOUR DAY BRIGHT",source:"— Unknown",
+   clues:[{l:"A",h:"A happy face expression",a:"SMILE"},{l:"B",h:"Able to; having power to",a:"CAN"},{l:"C",h:"Twenty-four hours",a:"DAY"},{l:"D",h:"Full of light; shining",a:"BRIGHT"},{l:"E",h:"Create or produce",a:"MAKE"}]},
+  {id:3,title:"Stars",theme:"Night Sky",quote:"STARS SHINE BRIGHTEST IN THE DARK",source:"— Unknown",
+   clues:[{l:"A",h:"Tiny lights in the night sky",a:"STARS"},{l:"B",h:"To glow with light",a:"SHINE"},{l:"C",h:"Most bright",a:"BRIGHTEST"},{l:"D",h:"Having no light",a:"DARK"}]},
+  {id:4,title:"Try",theme:"Effort",quote:"TRY YOUR BEST AND NEVER GIVE UP",source:"— Unknown",
+   clues:[{l:"A",h:"To attempt or make effort",a:"TRY"},{l:"B",h:"Stop doing something forever",a:"GIVE"},{l:"C",h:"At no time; not ever",a:"NEVER"},{l:"D",h:"Highest quality effort",a:"BEST"}]},
+  {id:5,title:"Dream Big",theme:"Aspiration",quote:"DREAM BIG AND WORK HARD",source:"— Unknown",
+   clues:[{l:"A",h:"Hopes and wishes when sleeping",a:"DREAM"},{l:"B",h:"Large; important",a:"BIG"},{l:"C",h:"Also; in addition",a:"AND"},{l:"D",h:"Effort and activity to achieve",a:"WORK"},{l:"E",h:"With great effort",a:"HARD"}]},
+  {id:6,title:"Friends",theme:"Friendship",quote:"GOOD FRIENDS MAKE LIFE BETTER",source:"— Unknown",
+   clues:[{l:"A",h:"Kind and pleasant",a:"GOOD"},{l:"B",h:"People you like and trust",a:"FRIENDS"},{l:"C",h:"Create or produce",a:"MAKE"},{l:"D",h:"The experience of living",a:"LIFE"},{l:"E",h:"More excellent or improved",a:"BETTER"}]},
+  {id:7,title:"Learn",theme:"Education",quote:"EVERY DAY IS A CHANCE TO LEARN SOMETHING NEW",source:"— Unknown",
+   clues:[{l:"A",h:"Each, all of them",a:"EVERY"},{l:"B",h:"Twenty-four hours",a:"DAY"},{l:"C",h:"An opportunity",a:"CHANCE"},{l:"D",h:"Gain knowledge",a:"LEARN"},{l:"E",h:"A thing (not named specifically)",a:"SOMETHING"},{l:"F",h:"Not old; just created",a:"NEW"}]},
+  {id:8,title:"Brave",theme:"Courage",quote:"BE BRAVE EVEN WHEN YOU ARE SCARED",source:"— Unknown",
+   clues:[{l:"A",h:"To exist; to be (imperative)",a:"BE"},{l:"B",h:"Showing courage and strength",a:"BRAVE"},{l:"C",h:"At the same time; despite that",a:"EVEN"},{l:"D",h:"Frightened; feeling fear",a:"SCARED"}]},
+  {id:9,title:"Love",theme:"Caring",quote:"LOVE MAKES THE WORLD GO ROUND",source:"— Unknown",
+   clues:[{l:"A",h:"Deep caring feeling for others",a:"LOVE"},{l:"B",h:"Creates or produces",a:"MAKES"},{l:"C",h:"The planet we live on",a:"WORLD"},{l:"D",h:"To move in a circle",a:"ROUND"},{l:"E",h:"Travel; move",a:"GO"}]},
+  {id:10,title:"Sunny",theme:"Joy",quote:"CHOOSE HAPPINESS AND LET YOUR LIGHT SHINE",source:"— Unknown",
+   clues:[{l:"A",h:"To pick or select",a:"CHOOSE"},{l:"B",h:"The feeling of joy and pleasure",a:"HAPPINESS"},{l:"C",h:"Allow; permit",a:"LET"},{l:"D",h:"The glow from the sun",a:"LIGHT"},{l:"E",h:"To glow or radiate brightness",a:"SHINE"}]},
+],
+b1b2: [
+  {id:1,title:"Knowledge",theme:"Philosophy",quote:"KNOWLEDGE IS POWER AND POWER IS FREEDOM",source:"— Francis Bacon",
+   clues:[{l:"A",h:"What you gain from books and experience",a:"KNOWLEDGE"},{l:"B",h:"Ability to do something; strength",a:"POWER"},{l:"C",h:"The state of being free from restriction",a:"FREEDOM"},{l:"D",h:"A conjunction linking ideas",a:"AND"}]},
+  {id:2,title:"Imagination",theme:"Creativity",quote:"IMAGINATION IS MORE IMPORTANT THAN KNOWLEDGE",source:"— Albert Einstein",
+   clues:[{l:"A",h:"Ability to form mental images and ideas",a:"IMAGINATION"},{l:"B",h:"Greater in significance or value",a:"MORE"},{l:"C",h:"Facts and skills acquired through experience",a:"KNOWLEDGE"},{l:"D",h:"Used to introduce a comparison",a:"THAN"},{l:"E",h:"Of great significance; essential",a:"IMPORTANT"}]},
+  {id:3,title:"Journey",theme:"Life Wisdom",quote:"LIFE IS A JOURNEY NOT A DESTINATION",source:"— Ralph Waldo Emerson",
+   clues:[{l:"A",h:"The experience of being alive",a:"LIFE"},{l:"B",h:"An act of travelling from place to place",a:"JOURNEY"},{l:"C",h:"Negation; the opposite of yes",a:"NOT"},{l:"D",h:"The place you are going to",a:"DESTINATION"}]},
+  {id:4,title:"Happiness",theme:"Positive Thinking",quote:"HAPPINESS IS NOT SOMETHING READY MADE IT COMES FROM YOUR OWN ACTIONS",source:"— Dalai Lama",
+   clues:[{l:"A",h:"The state of feeling joy and contentment",a:"HAPPINESS"},{l:"B",h:"Prepared in advance",a:"READY"},{l:"C",h:"An unspecified thing",a:"SOMETHING"},{l:"D",h:"Things done intentionally; deeds",a:"ACTIONS"},{l:"E",h:"Belonging to you (possessive)",a:"YOUR"},{l:"F",h:"To arrive or originate from",a:"COMES"}]},
+  {id:5,title:"Courage",theme:"Perseverance",quote:"COURAGE IS NOT THE ABSENCE OF FEAR BUT THE TRIUMPH OVER IT",source:"— Nelson Mandela",
+   clues:[{l:"A",h:"Bravery in the face of danger",a:"COURAGE"},{l:"B",h:"The state of lacking something",a:"ABSENCE"},{l:"C",h:"An unpleasant emotion caused by danger",a:"FEAR"},{l:"D",h:"A great victory or achievement",a:"TRIUMPH"},{l:"E",h:"However; on the other hand",a:"BUT"},{l:"F",h:"Above; across; at the end of",a:"OVER"}]},
+  {id:6,title:"Dreams",theme:"Aspiration",quote:"ALL YOUR DREAMS CAN COME TRUE IF YOU HAVE THE COURAGE TO PURSUE THEM",source:"— Walt Disney",
+   clues:[{l:"A",h:"Cherished aspirations or ambitions",a:"DREAMS"},{l:"B",h:"Having the ability or possibility",a:"CAN"},{l:"C",h:"To arrive; to reach",a:"COME"},{l:"D",h:"On the condition that",a:"IF"},{l:"E",h:"Bravery and determination",a:"COURAGE"},{l:"F",h:"To follow or chase persistently",a:"PURSUE"},{l:"G",h:"Everything; the total amount",a:"ALL"},{l:"H",h:"Accurate; correct; matching reality",a:"TRUE"}]},
+  {id:7,title:"Reading",theme:"Learning",quote:"THE MORE THAT YOU READ THE MORE THINGS YOU WILL KNOW",source:"— Dr. Seuss",
+   clues:[{l:"A",h:"A greater amount or degree",a:"MORE"},{l:"B",h:"To look at and comprehend written words",a:"READ"},{l:"C",h:"Objects, ideas, or matters (plural)",a:"THINGS"},{l:"D",h:"Used to express future intention",a:"WILL"},{l:"E",h:"To be aware of; to have understanding",a:"KNOW"}]},
+  {id:8,title:"Success",theme:"Achievement",quote:"SUCCESS IS WALKING FROM FAILURE TO FAILURE WITH NO LOSS OF ENTHUSIASM",source:"— Winston Churchill",
+   clues:[{l:"A",h:"The accomplishment of an aim or purpose",a:"SUCCESS"},{l:"B",h:"Moving on foot from one place to another",a:"WALKING"},{l:"C",h:"Lack of success; not achieving a goal",a:"FAILURE"},{l:"D",h:"A decrease in amount or value",a:"LOSS"},{l:"E",h:"Intense and eager enjoyment or interest",a:"ENTHUSIASM"},{l:"F",h:"Not any; zero (used with nouns)",a:"NO"}]},
+  {id:9,title:"Excellence",theme:"Quality",quote:"WE ARE WHAT WE REPEATEDLY DO EXCELLENCE THEN IS NOT AN ACT BUT A HABIT",source:"— Aristotle",
+   clues:[{l:"A",h:"The quality of being outstanding",a:"EXCELLENCE"},{l:"B",h:"Done many times in the same way",a:"REPEATEDLY"},{l:"C",h:"A thing done; a deed or performance",a:"ACT"},{l:"D",h:"A settled tendency of behaviour",a:"HABIT"},{l:"E",h:"Therefore; as a consequence",a:"THEN"},{l:"F",h:"To carry out or perform",a:"DO"}]},
+  {id:10,title:"Change",theme:"Transformation",quote:"BE THE CHANGE YOU WISH TO SEE IN THE WORLD",source:"— Mahatma Gandhi",
+   clues:[{l:"A",h:"To become different; a transformation",a:"CHANGE"},{l:"B",h:"To desire or want something sincerely",a:"WISH"},{l:"C",h:"To perceive with the eyes",a:"SEE"},{l:"D",h:"The earth and all people living on it",a:"WORLD"},{l:"E",h:"A preposition of direction or purpose",a:"TO"},{l:"F",h:"Inside; within a place or period",a:"IN"},{l:"G",h:"Imperative of 'to be'; exist as",a:"BE"}]},
+],
+c1: [
+  {id:1,title:"Wisdom",theme:"Philosophy",quote:"THE ONLY TRUE WISDOM IS IN KNOWING YOU KNOW NOTHING",source:"— Socrates",
+   clues:[{l:"A",h:"The quality of having good judgment",a:"WISDOM"},{l:"B",h:"Genuine; not false or imitation",a:"TRUE"},{l:"C",h:"Being aware of or understanding something",a:"KNOWING"},{l:"D",h:"Not anything; zero things",a:"NOTHING"}]},
+  {id:2,title:"Character",theme:"Integrity",quote:"CHARACTER IS HOW YOU TREAT THOSE WHO CAN DO NOTHING FOR YOU",source:"— Unknown",
+   clues:[{l:"A",h:"The mental and moral qualities of a person",a:"CHARACTER"},{l:"B",h:"In what way; the manner in which",a:"HOW"},{l:"C",h:"To interact with; handle or deal with",a:"TREAT"},{l:"D",h:"People; persons (plural)",a:"THOSE"},{l:"E",h:"Not anything; zero things",a:"NOTHING"}]},
+  {id:3,title:"Persistence",theme:"Determination",quote:"IT DOES NOT MATTER HOW SLOWLY YOU GO AS LONG AS YOU DO NOT STOP",source:"— Confucius",
+   clues:[{l:"A",h:"To be significant or of importance",a:"MATTER"},{l:"B",h:"In what way; by what means",a:"HOW"},{l:"C",h:"At a low speed; not quickly",a:"SLOWLY"},{l:"D",h:"Continuing; provided that",a:"LONG"},{l:"E",h:"To halt; cease movement or activity",a:"STOP"}]},
+  {id:4,title:"Opportunity",theme:"Growth",quote:"IN THE MIDDLE OF EVERY DIFFICULTY LIES OPPORTUNITY",source:"— Albert Einstein",
+   clues:[{l:"A",h:"The central part; the halfway point",a:"MIDDLE"},{l:"B",h:"Each and all; without exception",a:"EVERY"},{l:"C",h:"A challenging or hard situation",a:"DIFFICULTY"},{l:"D",h:"Exists; rests flat",a:"LIES"},{l:"E",h:"A favourable set of circumstances",a:"OPPORTUNITY"}]},
+  {id:5,title:"Creativity",theme:"Innovation",quote:"CREATIVITY IS INTELLIGENCE HAVING FUN",source:"— Albert Einstein",
+   clues:[{l:"A",h:"The use of imagination to produce original ideas",a:"CREATIVITY"},{l:"B",h:"The ability to acquire and apply knowledge",a:"INTELLIGENCE"},{l:"C",h:"Experiencing joy or amusement",a:"HAVING"},{l:"D",h:"Enjoyment, amusement, or lighthearted pleasure",a:"FUN"}]},
+  {id:6,title:"Resilience",theme:"Strength",quote:"THE HUMAN SPIRIT IS STRONGER THAN ANYTHING THAT CAN HAPPEN TO IT",source:"— C.C. Scott",
+   clues:[{l:"A",h:"Relating to people; of the human race",a:"HUMAN"},{l:"B",h:"The non-physical part of a person; the soul",a:"SPIRIT"},{l:"C",h:"More powerful or robust",a:"STRONGER"},{l:"D",h:"Any thing; no matter what",a:"ANYTHING"},{l:"E",h:"To take place; occur",a:"HAPPEN"}]},
+  {id:7,title:"Truth",theme:"Honesty",quote:"THREE THINGS CANNOT BE LONG HIDDEN THE SUN THE MOON AND THE TRUTH",source:"— Buddha",
+   clues:[{l:"A",h:"Number after two",a:"THREE"},{l:"B",h:"Objects, ideas, or matters",a:"THINGS"},{l:"C",h:"Unable to; lack the ability",a:"CANNOT"},{l:"D",h:"For a great duration of time",a:"LONG"},{l:"E",h:"Kept from sight; concealed",a:"HIDDEN"},{l:"F",h:"The star at the centre of our solar system",a:"SUN"},{l:"G",h:"The Earth's natural satellite",a:"MOON"},{l:"H",h:"That which is in accordance with fact or reality",a:"TRUTH"}]},
+  {id:8,title:"Legacy",theme:"Purpose",quote:"THE MEANING OF LIFE IS TO FIND YOUR GIFT THE PURPOSE OF LIFE IS TO GIVE IT AWAY",source:"— Pablo Picasso",
+   clues:[{l:"A",h:"The significance or importance of something",a:"MEANING"},{l:"B",h:"The experience of being alive",a:"LIFE"},{l:"C",h:"Discover; locate something sought",a:"FIND"},{l:"D",h:"Belonging to you",a:"YOUR"},{l:"E",h:"A special talent or ability given to someone",a:"GIFT"},{l:"F",h:"The reason for which something exists",a:"PURPOSE"},{l:"G",h:"To hand over; donate",a:"GIVE"},{l:"H",h:"In the opposite direction; departing",a:"AWAY"}]},
+  {id:9,title:"Existence",theme:"Existentialism",quote:"EXISTENCE PRECEDES ESSENCE WE ARE CONDEMNED TO BE FREE",source:"— Jean-Paul Sartre",
+   clues:[{l:"A",h:"The fact of having being or life",a:"EXISTENCE"},{l:"B",h:"To come before in order or importance",a:"PRECEDES"},{l:"C",h:"The fundamental nature of something",a:"ESSENCE"},{l:"D",h:"Declared guilty and sentenced",a:"CONDEMNED"},{l:"E",h:"Having freedom; not constrained",a:"FREE"}]},
+  {id:10,title:"Consciousness",theme:"Mindfulness",quote:"THE PRESENT MOMENT IS THE ONLY MOMENT AVAILABLE TO US AND IT IS THE DOOR TO ALL MOMENTS",source:"— Thich Nhat Hanh",
+   clues:[{l:"A",h:"Existing now; the current time",a:"PRESENT"},{l:"B",h:"A particular point in time",a:"MOMENT"},{l:"C",h:"The sole one; not more than one",a:"ONLY"},{l:"D",h:"Reachable; accessible",a:"AVAILABLE"},{l:"E",h:"An opening in a wall; entry",a:"DOOR"},{l:"F",h:"The whole quantity; every one",a:"ALL"}]},
+]};
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let gems = 0, progress = {};
+let currentMode = null, currentLevel = null;
+let cMap = {}, rMap = {}; // cipher maps
+let playerAns = {}, activeClue = 0, activeCell = 0, hintsUsed = 0, startTime = 0;
+
+function loadData() {
+  try {
+    const d = JSON.parse(localStorage.getItem('crostic2') || '{}');
+    gems = d.gems || 0; progress = d.progress || {};
+  } catch(e) {}
+}
+function saveData() {
+  localStorage.setItem('crostic2', JSON.stringify({gems, progress}));
+}
+function addGems(n) { gems += n; saveData(); refreshGemDisplays(); }
+function spendGems(n) { if (gems < n) return false; gems -= n; saveData(); refreshGemDisplays(); return true; }
+function refreshGemDisplays() {
+  ['home-gems','map-gems','nav-gems'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = gems;
+  });
+}
+function getProgress(mode, id) { return (progress[mode] || {})[id] || {}; }
+function setProgress(mode, id, stars) {
+  if (!progress[mode]) progress[mode] = {};
+  const cur = progress[mode][id] || {};
+  progress[mode][id] = { completed: true, stars: Math.max(stars, cur.stars || 0) };
+  saveData();
+}
+
+// ══════════════════════════════════════════════════════════
+// HOME SCREEN
+// ══════════════════════════════════════════════════════════
+function renderHome() {
+  refreshGemDisplays();
+  ['kids','b1b2','c1'].forEach(mode => {
+    const levels = ALL_LEVELS[mode];
+    const done = levels.filter(l => getProgress(mode, l.id).completed).length;
+    const pct = Math.round(done / levels.length * 100);
+    const fill = document.getElementById(`prog-${mode}`);
+    const txt = document.getElementById(`prog-${mode}-txt`);
+    if (fill) fill.style.width = pct + '%';
+    if (txt) txt.textContent = `${done}/${levels.length}`;
+  });
+}
+
+function openMap(mode) {
+  sfxClick();
+  currentMode = mode;
+  const modeNames = { kids:'🌈 Kids', b1b2:'🧩 Challenger', c1:'🔮 Master' };
+  document.getElementById('map-title').textContent = modeNames[mode];
+  document.getElementById('map-gems').textContent = gems;
+  renderLevelMap();
+  showScreen('screen-map');
+}
+
+// ══════════════════════════════════════════════════════════
+// LEVEL MAP
+// ══════════════════════════════════════════════════════════
+function renderLevelMap() {
+  const levels = ALL_LEVELS[currentMode];
+  const grid = document.getElementById('levels-grid');
+  grid.innerHTML = '';
+  levels.forEach((lv, i) => {
+    const prog = getProgress(currentMode, lv.id);
+    const unlocked = i === 0 || getProgress(currentMode, levels[i-1].id).completed;
+    const card = document.createElement('div');
+    card.className = `lmap-card ${prog.completed ? 'completed' : ''} ${!unlocked ? 'locked' : ''}`;
+    const starStr = prog.completed ? ['⭐','⭐⭐','⭐⭐⭐'][Math.max(0,(prog.stars||1)-1)] : '';
+    card.innerHTML = `
+      <div class="lmc-num">Level ${lv.id}</div>
+      <div class="lmc-title">${lv.title}</div>
+      <div class="lmc-theme">${lv.theme}</div>
+      <div class="lmc-stars">${starStr || '☆☆☆'}</div>
+      ${!unlocked ? '<div class="lmc-lock">🔒</div>' : ''}
+      ${prog.completed ? '<div class="lmc-done-badge">Done</div>' : ''}
+    `;
+    if (unlocked) { card.addEventListener('click', () => { sfxClick(); startLevel(currentMode, lv.id); }); }
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD CIPHER
+// ══════════════════════════════════════════════════════════
+function buildCipher(level) {
+  const all = level.quote + level.clues.map(c=>c.a).join('');
+  const letters = [...new Set(all.replace(/[^A-Z]/g,'').split(''))];
+  const shuffled = [...letters].sort(() => Math.random() - 0.5);
+  cMap = {}; rMap = {};
+  shuffled.forEach((l,i) => { cMap[l] = i+1; rMap[i+1] = l; });
+}
+
+// ══════════════════════════════════════════════════════════
+// START LEVEL
+// ══════════════════════════════════════════════════════════
+function startLevel(mode, id) {
+  currentMode = mode;
+  currentLevel = ALL_LEVELS[mode].find(l => l.id === id);
+  buildCipher(currentLevel);
+
+  playerAns = {};
+  currentLevel.clues.forEach((c,i) => playerAns[i] = Array(c.a.length).fill(''));
+  activeClue = 0; activeCell = 0; hintsUsed = 0; startTime = Date.now();
+
+  const modeEmoji = {kids:'🌈',b1b2:'🧩',c1:'🔮'}[mode];
+  document.getElementById('gtb-title').textContent = currentLevel.title;
+  document.getElementById('gtb-subtitle').textContent = `${modeEmoji} Level ${id}`;
+  document.getElementById('nav-gems').textContent = gems;
+
+  showScreen('screen-game');
+  renderQuote(); renderClues(); buildKeyboard(); updateProgress();
+  setActive(0, 0);
+  sfxOpen();
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER QUOTE
+// ══════════════════════════════════════════════════════════
+function renderQuote() {
+  const wrap = document.getElementById('quote-words');
+  wrap.innerHTML = '';
+  document.getElementById('quote-source').textContent = currentLevel.source;
+  currentLevel.quote.split(' ').forEach((word, wi) => {
+    const wd = document.createElement('div'); wd.className = 'quote-word';
+    word.split('').forEach(ch => {
+      const cell = document.createElement('div'); cell.className = 'q-cell';
+      cell.dataset.letter = ch; cell.dataset.num = cMap[ch];
+      const ql = document.createElement('div'); ql.className = 'q-letter';
+      const qn = document.createElement('div'); qn.className = 'q-num'; qn.textContent = cMap[ch];
+      cell.appendChild(ql); cell.appendChild(qn); wd.appendChild(cell);
+    });
+    wrap.appendChild(wd);
+  });
+  syncQuote();
+}
+
+function syncQuote() {
+  const solved = {};
+  currentLevel.clues.forEach((c,ci) => {
+    c.a.split('').forEach((ch,idx) => {
+      const typed = playerAns[ci][idx];
+      if (typed) solved[cMap[ch]] = typed;
+    });
+  });
+  document.querySelectorAll('.q-cell').forEach(cell => {
+    const num = parseInt(cell.dataset.num), ch = cell.dataset.letter;
+    const ql = cell.querySelector('.q-letter');
+    const typed = solved[num];
+    ql.textContent = typed || '';
+    ql.className = 'q-letter' + (typed ? (typed===ch ? ' q-correct' : ' q-filled') : '');
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER CLUES
+// ══════════════════════════════════════════════════════════
+function renderClues() {
+  const list = document.getElementById('clues-list'); list.innerHTML = '';
+  currentLevel.clues.forEach((clue, ci) => {
+    const card = document.createElement('div');
+    card.className = 'clue-card'; card.id = `cl-${ci}`;
+    const solved = playerAns[ci].join('') === clue.a;
+    if (solved) card.classList.add('cc-solved');
+    card.innerHTML = `
+      <div class="clue-top">
+        <div class="clue-badge">${clue.l}</div>
+        <div class="clue-hint">${clue.h}</div>
+      </div>
+      <div class="clue-cells" id="cells-${ci}"></div>
+    `;
+    const cellsWrap = card.querySelector(`#cells-${ci}`);
+    clue.a.split('').forEach((ch, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'c-cell'; cell.id = `cc-${ci}-${idx}`;
+      cell.dataset.clue = ci; cell.dataset.idx = idx;
+      const num = document.createElement('span'); num.className = 'cc-num'; num.textContent = cMap[ch];
+      const letter = document.createElement('span'); letter.className = 'cc-letter'; letter.id = `ccl-${ci}-${idx}`;
+      const typed = playerAns[ci][idx];
+      if (typed) { letter.textContent = typed; if (typed===ch) cell.classList.add('cc-correct'); }
+      cell.appendChild(num); cell.appendChild(letter);
+      cell.addEventListener('click', () => { sfxTap(); setActive(ci, idx); });
+      cellsWrap.appendChild(cell);
+    });
+    card.addEventListener('click', e => { if (!e.target.closest('.c-cell')) { sfxTap(); setActive(ci, 0); } });
+    list.appendChild(card);
+  });
+  highlightActive();
+}
+
+// ══════════════════════════════════════════════════════════
+// ACTIVE CELL
+// ══════════════════════════════════════════════════════════
+function setActive(ci, idx) {
+  activeClue = ci; activeCell = idx;
+  highlightActive();
+  document.getElementById(`cl-${ci}`)?.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function highlightActive() {
+  document.querySelectorAll('.c-cell').forEach(el => el.classList.remove('cc-active-cell','cc-highlight'));
+  document.querySelectorAll('.q-letter').forEach(el => el.classList.remove('q-highlighted'));
+  document.querySelectorAll('.clue-card').forEach(el => el.classList.remove('cc-active'));
+  if (activeClue === null) return;
+  document.getElementById(`cl-${activeClue}`)?.classList.add('cc-active');
+  const el = document.getElementById(`cc-${activeClue}-${activeCell}`);
+  if (el) el.classList.add('cc-active-cell');
+  const activeNum = cMap[currentLevel.clues[activeClue].a[activeCell]];
+  // Highlight same-number cells
+  currentLevel.clues.forEach((c,ci) => c.a.split('').forEach((ch,idx) => {
+    if (cMap[ch] === activeNum && !(ci===activeClue && idx===activeCell)) {
+      document.getElementById(`cc-${ci}-${idx}`)?.classList.add('cc-highlight');
+    }
+  }));
+  // Highlight quote
+  document.querySelectorAll('.q-cell').forEach(cell => {
+    if (parseInt(cell.dataset.num) === activeNum) cell.querySelector('.q-letter')?.classList.add('q-highlighted');
+  });
+}
+
+function nextEmptyCell(ci, fromIdx) {
+  const clue = currentLevel.clues[ci];
+  for (let i = fromIdx+1; i < clue.a.length; i++) if (!playerAns[ci][i]) { setActive(ci,i); return; }
+  for (let i = 0; i < fromIdx; i++) if (!playerAns[ci][i]) { setActive(ci,i); return; }
+  // Move to next unsolved clue
+  for (let c=0; c<currentLevel.clues.length; c++) {
+    const nc = currentLevel.clues[c];
+    for (let idx=0; idx<nc.a.length; idx++) if (!playerAns[c][idx]) { setActive(c,idx); return; }
+  }
+  checkWin();
+}
+
+// ══════════════════════════════════════════════════════════
+// KEYBOARD
+// ══════════════════════════════════════════════════════════
+const KB = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  ['A','S','D','F','G','H','J','K','L'],
+  ['DEL','Z','X','C','V','B','N','M','←']
+];
+function buildKeyboard() {
+  KB.forEach((row,ri) => {
+    const el = document.getElementById(`kb-r${ri+1}`); el.innerHTML = '';
+    row.forEach(k => {
+      const btn = document.createElement('div');
+      btn.className = 'kk' + (k==='DEL'||k==='←' ? ' kk-action' : '');
+      btn.textContent = k==='DEL' ? '⌫' : k; btn.dataset.k = k;
+      btn.addEventListener('click', () => handleKey(k));
+      el.appendChild(btn);
+    });
+  });
+}
+
+function handleKey(k) {
+  ac(); // unlock audio
+  if (activeClue === null) return;
+  const clue = currentLevel.clues[activeClue];
+  if (k==='DEL'||k==='←') {
+    if (playerAns[activeClue][activeCell]) {
+      playerAns[activeClue][activeCell] = '';
+      updateCell(activeClue, activeCell);
+    } else if (activeCell > 0) {
+      setActive(activeClue, activeCell-1);
+      playerAns[activeClue][activeCell-1] = '';
+      updateCell(activeClue, activeCell-1);
+    }
+    syncQuote(); updateProgress(); return;
+  }
+  if (/^[A-Z]$/.test(k)) {
+    playerAns[activeClue][activeCell] = k;
+    updateCell(activeClue, activeCell);
+    syncQuote(); updateProgress();
+    // Animate key
+    const btn = document.querySelector(`.kk[data-k="${k}"]`);
+    if (btn) { btn.classList.add('kk-pressed'); setTimeout(()=>btn.classList.remove('kk-pressed'),100); }
+    sfxTap();
+    const word = playerAns[activeClue].join('');
+    if (word === clue.a) { markSolved(activeClue); }
+    else if (activeCell < clue.a.length-1) { setActive(activeClue, activeCell+1); }
+    else { nextEmptyCell(activeClue, activeCell); }
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('screen-game').classList.contains('active')) return;
+  if (e.key==='Backspace') { e.preventDefault(); handleKey('DEL'); }
+  else if (/^[a-zA-Z]$/.test(e.key)) { e.preventDefault(); handleKey(e.key.toUpperCase()); }
+  else if (e.key==='ArrowRight' && activeCell < currentLevel.clues[activeClue].a.length-1) setActive(activeClue, activeCell+1);
+  else if (e.key==='ArrowLeft' && activeCell > 0) setActive(activeClue, activeCell-1);
+  else if (e.key==='ArrowDown' && activeClue < currentLevel.clues.length-1) setActive(activeClue+1, 0);
+  else if (e.key==='ArrowUp' && activeClue > 0) setActive(activeClue-1, 0);
+});
+
+function updateCell(ci, idx) {
+  const typed = playerAns[ci][idx], ch = currentLevel.clues[ci].a[idx];
+  const span = document.getElementById(`ccl-${ci}-${idx}`);
+  const cell = document.getElementById(`cc-${ci}-${idx}`);
+  if (!span || !cell) return;
+  span.textContent = typed || '';
+  if (typed) { span.classList.add('cc-reveal'); setTimeout(()=>span.classList.remove('cc-reveal'),400); }
+  cell.classList.remove('cc-correct','cc-error');
+  if (typed === ch) cell.classList.add('cc-correct');
+}
+
+function markSolved(ci) {
+  const clue = currentLevel.clues[ci];
+  clue.a.split('').forEach((_,idx) => {
+    const cell = document.getElementById(`cc-${ci}-${idx}`);
+    const span = document.getElementById(`ccl-${ci}-${idx}`);
+    if (cell) cell.classList.add('cc-correct');
+    if (span) { span.textContent = clue.a[idx]; span.classList.add('cc-reveal'); setTimeout(()=>span.classList.remove('cc-reveal'),400); }
+  });
+  document.getElementById(`cl-${ci}`)?.classList.add('cc-solved');
+  const badge = document.querySelector(`#cl-${ci} .clue-badge`);
+  if (badge) badge.style.background = 'rgba(74,222,128,0.2)', badge.style.color = '#4ade80';
+  sfxCorrect();
+  showToast(`✓ "${clue.a}" solved!`, 'toast-success');
+  syncQuote();
+  setTimeout(() => nextEmptyCell(ci, clue.a.length-1), 300);
+}
+
+// ══════════════════════════════════════════════════════════
+// PROGRESS
+// ══════════════════════════════════════════════════════════
+function updateProgress() {
+  let filled=0, total=0;
+  currentLevel.clues.forEach((c,ci) => { total+=c.a.length; filled+=playerAns[ci].filter(Boolean).length; });
+  const pct = total ? Math.round(filled/total*100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `${filled} / ${total}`;
+}
+
+// ══════════════════════════════════════════════════════════
+// HINTS
+// ══════════════════════════════════════════════════════════
+function openHint() { sfxHint(); document.getElementById('hint-modal').classList.add('show'); }
+function closeHint(e) {
+  if (!e || e.target.id==='hint-modal' || e.target.closest('.hint-opt')) {
+    document.getElementById('hint-modal').classList.remove('show');
+  }
+}
+
+function hintRevealLetter() {
+  document.getElementById('hint-modal').classList.remove('show');
+  const clue = currentLevel.clues[activeClue];
+  let revealed = false;
+  for (let idx=0; idx<clue.a.length; idx++) {
+    if (playerAns[activeClue][idx] !== clue.a[idx]) {
+      playerAns[activeClue][idx] = clue.a[idx]; updateCell(activeClue,idx);
+      syncQuote(); updateProgress(); hintsUsed++; revealed=true; sfxReveal();
+      showToast('💡 Letter revealed!', 'toast-hint');
+      if (playerAns[activeClue].join('')===clue.a) markSolved(activeClue);
+      break;
+    }
+  }
+  if (!revealed) showToast('Word is already correct! ✓', 'toast-success');
+}
+
+function hintRevealWord() {
+  document.getElementById('hint-modal').classList.remove('show');
+  if (!spendGems(5)) { showToast('Not enough gems! 💎 Need 5'); return; }
+  const clue = currentLevel.clues[activeClue];
+  clue.a.split('').forEach((_,idx) => { playerAns[activeClue][idx]=clue.a[idx]; updateCell(activeClue,idx); });
+  syncQuote(); updateProgress(); hintsUsed+=3; sfxReveal();
+  markSolved(activeClue); showToast('✨ Word revealed! -5 💎', 'toast-hint');
+}
+
+function hintCheckErrors() {
+  document.getElementById('hint-modal').classList.remove('show');
+  let errs=0;
+  currentLevel.clues.forEach((c,ci) => c.a.split('').forEach((ch,idx) => {
+    const typed=playerAns[ci][idx];
+    if (typed && typed!==ch) {
+      const cell=document.getElementById(`cc-${ci}-${idx}`);
+      if (cell) { cell.classList.add('cc-error'); setTimeout(()=>cell.classList.remove('cc-error'),600); }
+      errs++;
+    }
+  }));
+  hintsUsed++;
+  sfxWrong();
+  showToast(errs ? `⚠ ${errs} error${errs>1?'s':''} found!` : '✓ No errors!', errs ? 'toast-error' : 'toast-success');
+}
+
+function hintCipherKey() {
+  document.getElementById('hint-modal').classList.remove('show');
+  if (!spendGems(3)) { showToast('Not enough gems! 💎 Need 3'); return; }
+  const solved = new Set();
+  currentLevel.clues.forEach((c,ci) => c.a.split('').forEach((ch,idx) => {
+    if (playerAns[ci][idx]===ch) solved.add(cMap[ch]);
+  }));
+  const unsolved = Object.keys(rMap).map(Number).filter(n=>!solved.has(n));
+  if (!unsolved.length) { showToast('All keys revealed!'); return; }
+  const num = unsolved[Math.floor(Math.random()*unsolved.length)], letter=rMap[num];
+  currentLevel.clues.forEach((c,ci) => c.a.split('').forEach((ch,idx) => {
+    if (cMap[ch]===num) { playerAns[ci][idx]=letter; updateCell(ci,idx); if(playerAns[ci].join('')===c.a)markSolved(ci); }
+  }));
+  syncQuote(); updateProgress(); hintsUsed+=2; sfxReveal();
+  showToast(`🗝️ ${num} = ${letter} revealed! -3 💎`, 'toast-hint');
+}
+
+// ══════════════════════════════════════════════════════════
+// WIN
+// ══════════════════════════════════════════════════════════
+function checkWin() {
+  const allOk = currentLevel.clues.every((c,ci) => playerAns[ci].join('')===c.a);
+  if (allOk) showWin();
+}
+
+function showWin() {
+  const elapsed = Math.floor((Date.now()-startTime)/1000);
+  const stars = hintsUsed===0 ? 3 : hintsUsed<=3 ? 2 : 1;
+  const reward = [0,10,15,20][stars];
+  addGems(reward);
+  setProgress(currentMode, currentLevel.id, stars);
+  sfxWin();
+  launchConfetti();
+
+  // Populate modal
+  const emojis = ['😊','🌟','🎉'];
+  document.getElementById('win-emoji').textContent = emojis[stars-1];
+  document.getElementById('win-title').textContent = ['Well done!','Amazing!','Perfect!'][stars-1];
+  document.getElementById('win-gems-badge').textContent = `+${reward} 💎`;
+  document.getElementById('win-quote-strip').innerHTML = `"${currentLevel.quote}"<div class="win-quote-author">${currentLevel.source}</div>`;
+  document.getElementById('win-msg').textContent = `Solved in ${elapsed}s with ${hintsUsed} hint${hintsUsed!==1?'s':''} used.`;
+
+  // Star animation
+  [1,2,3].forEach((n,i) => {
+    const el=document.getElementById(`s${n}`);
+    el.classList.remove('lit');
+    if (n<=stars) setTimeout(()=>{ el.classList.add('lit'); sfxLevelUp(); }, i*350+200);
+  });
+
+  const levels = ALL_LEVELS[currentMode];
+  const nextLv = levels.find(l => l.id === currentLevel.id+1);
+  document.getElementById('next-btn').style.display = nextLv ? '' : 'none';
+
+  setTimeout(()=>document.getElementById('win-modal').classList.add('show'), 500);
+}
+
+function nextLevel() {
+  sfxClick();
+  document.getElementById('win-modal').classList.remove('show');
+  const levels = ALL_LEVELS[currentMode];
+  const nextLv = levels.find(l => l.id === currentLevel.id+1);
+  if (nextLv) startLevel(currentMode, nextLv.id); else goToMap();
+}
+
+// ══════════════════════════════════════════════════════════
+// CONFETTI
+// ══════════════════════════════════════════════════════════
+function launchConfetti() {
+  const wrap = document.getElementById('confetti-wrap'); wrap.innerHTML='';
+  const colors=['#a78bfa','#f0abfc','#fbbf24','#4ade80','#60a5fa','#f87171','#fb923c'];
+  for (let i=0; i<70; i++) {
+    const p=document.createElement('div'); p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}%;top:-8px;width:${5+Math.random()*7}px;height:${5+Math.random()*7}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-delay:${Math.random()*1.5}s;animation-duration:${2.5+Math.random()*2}s;`;
+    wrap.appendChild(p);
+  }
+  setTimeout(()=>wrap.innerHTML='', 6000);
+}
+
+// ══════════════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goHome() { sfxClick(); renderHome(); showScreen('screen-home'); }
+function goToMap() {
+  sfxClick();
+  document.getElementById('win-modal').classList.remove('show');
+  document.getElementById('hint-modal').classList.remove('show');
+  renderLevelMap();
+  document.getElementById('map-gems').textContent = gems;
+  showScreen('screen-map');
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let _tt;
+function showToast(msg, cls='') {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show ' + cls;
+  clearTimeout(_tt); _tt=setTimeout(()=>el.className='',2400);
+}
+
+// ══════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════
+loadData();
+renderHome();
+</script>
+</body>
+</html>
